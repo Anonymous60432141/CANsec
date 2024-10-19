@@ -1,0 +1,55 @@
+(* Types *)
+type key.               
+type sci.               
+
+(* Public channel *)
+free c: channel.        
+
+(* Keys *)
+free k: key [private].  
+const szk: key [private]. 
+
+(* Secure Channel Identifiers for participants *)
+free sciA: sci.         
+free sciB: sci.         
+
+(* Functions for encryption, hashing, and key derivation *)
+fun enc(bitstring, key): bitstring.    
+fun h(bitstring, key): bitstring.      
+
+fun derive_SAK(key, nat): key.           
+
+(* Destructors *)
+fun dec(bitstring, key): bitstring
+reduc forall m: bitstring, k_enc: key; dec(enc(m, k_enc), k_enc) = m.
+reduc forall m: bitstring, k_h: key; get_message(h(m, k_h)) = m.
+
+(* --- persistent key storage --- *)
+table table_entry(sci, nat, key).   
+
+(* Events for logging *)
+event create_table_entry(sci, nat, key).  
+event distribute_key(sci, key, nat).  
+event completion.    
+
+(* Simple process that inserts a key into the table and does nothing *)
+let KeyInsertion =
+  let v = 0 in                   
+  let SAK = derive_SAK(szk, v) in  
+  insert table_entry(sciA, v, SAK);  
+  insert table_entry(sciB, v, SAK).
+
+let enc_dec =  
+  new m:bitstring;              
+  let v = 0 in                          
+  let enc_msg = enc(m, szk) in          
+  event create_table_entry(sciA, v, szk);  
+  out(c, enc_msg);
+  let received_enc_msg = enc_msg in    
+  let dec_msg = dec(received_enc_msg, szk) in
+  if dec_msg = m then event completion else 0.
+
+
+(* The main process execution *)
+process
+  (! KeyInsertion | ! enc_dec)          

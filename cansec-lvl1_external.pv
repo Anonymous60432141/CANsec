@@ -1,0 +1,69 @@
+(* External attacker has no information regarding the session keys *)
+(* In this model it is assumed that the session keys are distributed among the peers using some key agreement *)
+
+type key.
+type secure_channel.
+
+(* Secure Channels *)
+free scA: channel.
+free scB: channel.
+
+(* channel identifiers *)
+free sci_A: bitstring.
+free sci_B: bitstring.
+
+(* Constructors and destructors for CANsec operations *)
+fun enc(bitstring, key): bitstring.    (* Encryption function *)
+fun hmac(bitstring, key): bitstring.   (* ICV calculation *)
+
+fun dec(bitstring, key): bitstring     (* Decryption function *)
+reduc forall msg: bitstring, k_enc: key; dec(enc(msg, k_enc), k_enc) = msg.
+
+(* Events *)
+event message_received_B(bitstring, key).    (* Event triggered when Peer B receives the message *)
+event attacker_uses_A_identitty(bitstring).
+event message_send_A(bitstring, key).
+event message_received_B_unencrypted(bitstring, key).
+
+(* Peer A sends a message to Peer B *)
+let peerA(m:bitstring, k_A:key) = 
+    out(scA, (sci_A, enc(m, k_A), hmac(m, k_A)));
+    event message_send_A(m, k_A).     
+
+(* Peer B receives and decrypts the message *)
+let peerB(k_A:key, m:bitstring) = 
+    in(scA, (sci: bitstring, x: bitstring, icv:bitstring));           
+    let received_msg = dec(x, k_A) in
+    if icv = hmac(received_msg, k_A) && received_msg = m  then   
+        event message_received_B(received_msg, k_A).
+
+let peerB_unencrypted(k_A: key) =
+    in(scA, (x: bitstring, icv: bitstring)); (* Peer B receives the encrypted message and HMAC *)
+    let received_msg = x in        (* Peer B decrypts the message using its key *)
+    if icv = hmac(received_msg, k_A) then    (* Peer B checks if the HMAC is valid *)
+        event message_received_B_unencrypted(received_msg, k_A).  (* If valid, event message_received_B is triggered *)
+
+let adversary(m:bitstring) = 
+    new k_fake:key;    
+    out(scA, (sci_A, m, hmac(m, k_fake)));  
+    event attacker_uses_A_identitty(m).
+
+
+(* Security Queries for Confidentiality, Integrity, and Authenticity *)
+
+
+(* Confidentiality: If m is encrypted *)
+query m:bitstring, k_A:key; event(message_received_B(m, k_A)) && attacker(m) ==> false.
+
+(* Authentication: If Peer B received a message (event message_received_B), it must have been sent by Peer A *)
+
+query m:bitstring, k_A:key; event(message_received_B_unencrypted(m, k_A)) && event(attacker_uses_A_identitty(m)) ==> false.
+
+
+(* Process *)
+process
+    new k_A: key;
+    new msg:bitstring;
+    new msg2:bitstring;
+    (!peerA(msg, k_A) | !peerB(k_A, msg) | !adversary(msg2) | !peerB_unencrypted(k_A))
+

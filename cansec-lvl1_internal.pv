@@ -1,0 +1,71 @@
+(* Internal attacker has all the information about the session keys *)
+(* In this model it is assumed that the session keys are distributed among the peers and peer is compromised *)
+
+type key.
+type secure_channel.
+
+(* Secure Channels *)
+free scA: channel.
+free scB: channel.
+free c: channel.
+
+(* channel identifiers *)
+free sci_A:bitstring.
+free sci_B:bitstring.
+free sci_C:bitstring.
+
+(* Message being sent by Peer A *)
+free m: bitstring [private].  (* Private message to be sent by Peer A *)
+
+(* Constructors and destructors for CANsec operations *)
+fun enc(bitstring, key): bitstring.    (* Encryption function *)
+
+fun dec(bitstring, key): bitstring    (* Decryption function *)
+reduc forall msg: bitstring, k_enc: key; dec(enc(msg, k_enc), k_enc) = msg.
+
+
+(* Events *)
+event message_received_B(bitstring).    (* Event triggered when Peer B receives the message *)
+event peerC_intercepted(bitstring).     (* Event triggered when Peer C intercepts the message *)
+event peerC_sends_B(bitstring).
+
+(* Peer A sends a message to Peer B *)
+let peerA(m:bitstring, k_A:key) = 
+    out(scA, (sci_A, enc(m, k_A))).     
+
+(* Peer B receives and decrypts the message *)
+let peerB(m:bitstring, k_A:key) = 
+    in(scA, (sci: bitstring, x: bitstring));              
+    let received_msg = dec(x, k_A) in   
+    if received_msg = m then
+    event message_received_B(received_msg).
+
+(* Peer C - internal attacker intercepts and decrypts the message *)
+let peerC_evesdrop(m:bitstring, k_A:key) = 
+    in(scA, (sci: bitstring, y: bitstring)); 
+    let intercepted_msg = dec(y, k_A) in
+    if intercepted_msg = m then
+    event peerC_intercepted(intercepted_msg).
+
+
+let peerC(m:bitstring, k_A:key) = 
+    out(scA, enc(m, k_A));
+    event peerC_sends_B(m).
+
+(* Security Queries for Confidentiality, Integrity, and Authenticity *)
+
+(* confidentiality*)
+query msg:bitstring; event(peerC_intercepted(msg)) ==> false.       (* true implies false is false *)
+
+(* Authneticity *)
+query msg:bitstring; event(peerC_sends_B(msg)) && event(message_received_B(msg)) ==> false.
+
+(* freshness value *)
+
+(* Process *)
+process
+    new k_A: key;
+    new msg:bitstring;
+   (!peerA(msg, k_A) | !peerB(msg, k_A) 
+   | !peerC_evesdrop(msg, k_A) | !peerC(msg, k_A) 
+   | !peerB(msg, k_A))

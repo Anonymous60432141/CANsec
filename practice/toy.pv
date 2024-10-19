@@ -1,0 +1,56 @@
+(* 
+A -> B: [fresh m] (pk(skA), aenc(m, pk(skB)))
+B -> A: aenc(m, pk(skA))
+
+Initiator role: parameters (ska, pkb)
+    1. generate fresh m 
+    2. output (pk(ska), aenc(m, pkb))
+    3. input x, check if adec(x,ska) = m.
+
+Responder role: parameter (skb)
+    1. receive x
+    2. let pka = fst x, z = adec(snd(x), skb)
+    3, output aenc(z, pka)
+*)
+
+
+free c: channel. 
+type skey.
+type pkey.
+fun pk(skey): pkey. 
+fun aenc(bitstring, pkey): bitstring. 
+
+event iDone(bitstring, skey, pkey).
+event freshkey(skey). 
+
+reduc forall m: bitstring, k: skey; adec(aenc(m, pk(k)), k) = m.
+
+let init(ska: skey, pkb: pkey) = 
+    new m: bitstring;
+    out(c, (pk(ska), aenc(m, pkb)));
+    in(c, x:bitstring); 
+    if adec(x,ska) = m then event iDone(m, ska, pkb).
+
+let resp(skb: skey) = 
+    in(c, (pka: pkey, y: bitstring));
+    let z = adec(y,skb) in 
+        out(c, aenc(z,pka)). 
+
+query z:bitstring, ska, skb:skey; 
+        event(iDone(z, ska, pk(skb))) && event(freshkey(skb)) && attacker(z) ==> false.
+
+process
+ (! 
+    new sk: skey; 
+    event freshkey(sk);
+    out(c, pk(sk)); 
+    ((! in(c, pkx:pkey); init(sk, pkx)) | 
+    (! resp(sk)))
+  )    
+
+
+
+
+
+
+
