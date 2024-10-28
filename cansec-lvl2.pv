@@ -1,55 +1,69 @@
-(* Types *)
-type key.               
-type sci.               
+(* set traceDisplay = long.
 
-(* Public channel *)
-free c: channel.        
+(* Define key type and channel *)
+type key.
+free scA: channel.
 
-(* Keys *)
-free k: key [private].  
-const szk: key [private]. 
+(* Encryption, Decryption, and HMAC functions *)
+fun enc(bitstring, key): bitstring.
+fun dec(bitstring, key): bitstring.
+fun hmac(bitstring, nat, key): bitstring.
 
-(* Secure Channel Identifiers for participants *)
-free sciA: sci.         
-free sciB: sci.         
+(* Equations for symmetric encryption and decryption *)
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
 
-(* Functions for encryption, hashing, and key derivation *)
-fun enc(bitstring, key): bitstring.    
-fun h(bitstring, key): bitstring.      
+(* Table to store freshness values to prevent replay attacks *)
+table freshness(bitstring, nat).
 
-fun derive_SAK(key, nat): key.           
+(* Events to track message sending, receiving, and replay detection *)
+event message_received_B(bitstring, nat).
+event message_send_A(bitstring, nat).
+event replay_attack(bitstring, nat).
+event replay_msg(bitstring, nat).
 
-(* Destructors *)
-fun dec(bitstring, key): bitstring
-reduc forall m: bitstring, k_enc: key; dec(enc(m, k_enc), k_enc) = m.
-reduc forall m: bitstring, k_h: key; get_message(h(m, k_h)) = m.
+(* Peer A sends a message to Peer B *)
+let peerA(m: bitstring, sci_A: bitstring, k_A: key, fresh: nat) =
+    let msg = enc(m, k_A) in
+    let icv = hmac(msg, fresh, k_A) in
+    event message_send_A(m, fresh);
+    out(scA, (sci_A, fresh, msg, icv)).
 
-(* --- persistent key storage --- *)
-table table_entry(sci, nat, key).   
+(* Peer B receives and verifies the message from Peer A *)
+let peerB(sci_A: bitstring, k_A: key) =
+    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
+    get freshness(sci_A, fv) suchthat fv < fresh in
+        if sci = sci_A && icv = hmac(x, fresh, k_A) then
+            let received_msg = dec(x, k_A) in
+            insert freshness(sci_A, fresh);  
+            event message_received_B(received_msg, fresh)
+        else
+            event replay_attack(sci_A, fresh).
 
-(* Events for logging *)
-event create_table_entry(sci, nat, key).  
-event distribute_key(sci, key, nat).  
-event completion.    
+(* Internal attacker intercepts and replays messages *)
+let peerC() =
+    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
+    event replay_msg(sci, fresh);  
+    let new_icv = hmac(msg, fres+100, k_A) in 
+    out(scA, (sci, fresh+100, x, new_icv)).  
 
-(* Simple process that inserts a key into the table and does nothing *)
-let KeyInsertion =
-  let v = 0 in                   
-  let SAK = derive_SAK(szk, v) in  
-  insert table_entry(sciA, v, SAK);  
-  insert table_entry(sciB, v, SAK).
+(* Confidentiality Query: Ensure the attacker cannot learn the message *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) && attacker(m) ==> false.
 
-let enc_dec =  
-  new m:bitstring;              
-  let v = 0 in                          
-  let enc_msg = enc(m, szk) in          
-  event create_table_entry(sciA, v, szk);  
-  out(c, enc_msg);
-  let received_enc_msg = enc_msg in    
-  let dec_msg = dec(received_enc_msg, szk) in
-  if dec_msg = m then event completion else 0.
+(* Authentication Query: Ensure every message received was actually sent *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
 
+(* Replay Attack Query: Ensure no message is accepted after a replay attack *)
+query sci: bitstring, fresh: nat;
+    event(replay_attack(sci, fresh)) ==> event(replay_msg(sci, fresh)).
 
-(* The main process execution *)
+(* Main Process *)
 process
-  (! KeyInsertion | ! enc_dec)          
+    new k_A: key;
+    out (scA, k_A);
+    new sci_A: bitstring;
+    new msg: bitstring;
+    insert freshness(sci_A, 0);
+    (!peerA(msg, sci_A, k_A, 1) | !peerB(sci_A, k_A) | !peerC()) *)

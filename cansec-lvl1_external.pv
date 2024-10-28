@@ -1,69 +1,67 @@
-(* External attacker has no information regarding the session keys *)
-(* In this model it is assumed that the session keys are distributed among the peers using some key agreement *)
+set traceDisplay = long.
 
+(* Define key type and channel *)
 type key.
-type secure_channel.
-
-(* Secure Channels *)
 free scA: channel.
-free scB: channel.
 
-(* channel identifiers *)
-free sci_A: bitstring.
-free sci_B: bitstring.
+(* Encryption, Decryption, and HMAC functions *)
+fun enc(bitstring, key): bitstring.
+fun dec(bitstring, key): bitstring.
+fun hmac(bitstring, nat, key): bitstring.
 
-(* Constructors and destructors for CANsec operations *)
-fun enc(bitstring, key): bitstring.    (* Encryption function *)
-fun hmac(bitstring, key): bitstring.   (* ICV calculation *)
+(* Equations for symmetric encryption and decryption *)
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
 
-fun dec(bitstring, key): bitstring     (* Decryption function *)
-reduc forall msg: bitstring, k_enc: key; dec(enc(msg, k_enc), k_enc) = msg.
+(* Table to store freshness values to prevent replay attacks *)
+table freshness(bitstring, nat).
 
-(* Events *)
-event message_received_B(bitstring, key).    (* Event triggered when Peer B receives the message *)
-event attacker_uses_A_identitty(bitstring).
-event message_send_A(bitstring, key).
-event message_received_B_unencrypted(bitstring, key).
+(* Events to track message sending, receiving, and replay detection *)
+event message_received_B(bitstring, nat).
+event message_send_A(bitstring, nat).
+event replay_attack(bitstring, nat).
+event replay_msg(bitstring, nat).
 
 (* Peer A sends a message to Peer B *)
-let peerA(m:bitstring, k_A:key) = 
-    out(scA, (sci_A, enc(m, k_A), hmac(m, k_A)));
-    event message_send_A(m, k_A).     
+let peerA(m: bitstring, sci_A: bitstring, k_A: key, fresh: nat) =
+    let msg = enc(m, k_A) in
+    let icv = hmac(msg, fresh, k_A) in
+    event message_send_A(m, fresh);
+    out(scA, (sci_A, fresh, msg, icv)).
 
-(* Peer B receives and decrypts the message *)
-let peerB(k_A:key, m:bitstring) = 
-    in(scA, (sci: bitstring, x: bitstring, icv:bitstring));           
-    let received_msg = dec(x, k_A) in
-    if icv = hmac(received_msg, k_A) && received_msg = m  then   
-        event message_received_B(received_msg, k_A).
+(* Peer B receives and verifies the message from Peer A *)
+let peerB(sci_A: bitstring, k_A: key) =
+    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
+    get freshness(sci, fv) suchthat fv >= fresh in 0 else
+        if sci = sci_A && icv = hmac(x, fresh, k_A) then
+            let received_msg = dec(x, k_A) in
+            insert freshness(sci_A, fresh);
+            event message_received_B(received_msg, fresh)
+        else
+            event replay_attack(sci, fresh).
 
-let peerB_unencrypted(k_A: key) =
-    in(scA, (x: bitstring, icv: bitstring)); (* Peer B receives the encrypted message and HMAC *)
-    let received_msg = x in        (* Peer B decrypts the message using its key *)
-    if icv = hmac(received_msg, k_A) then    (* Peer B checks if the HMAC is valid *)
-        event message_received_B_unencrypted(received_msg, k_A).  (* If valid, event message_received_B is triggered *)
+(* Peer C attempts a replay attack *)
+let peerC_replay() =
+    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
+    event replay_msg(sci, fresh);  
+    out(scA, (sci, fresh+10, x, icv)).
 
-let adversary(m:bitstring) = 
-    new k_fake:key;    
-    out(scA, (sci_A, m, hmac(m, k_fake)));  
-    event attacker_uses_A_identitty(m).
+(* Confidentiality Query: Ensure the attacker cannot learn the message *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) && attacker(m) ==> false.
 
+(* Authentication Query: Ensure every message received was actually sent *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
 
-(* Security Queries for Confidentiality, Integrity, and Authenticity *)
+(* Replay Attack Query: Ensure no message is accepted after a replay attack *)
+query sci: bitstring, fresh: nat;
+    event(replay_attack(sci, fresh)) ==> event(replay_msg(sci, fresh)).
 
-
-(* Confidentiality: If m is encrypted *)
-query m:bitstring, k_A:key; event(message_received_B(m, k_A)) && attacker(m) ==> false.
-
-(* Authentication: If Peer B received a message (event message_received_B), it must have been sent by Peer A *)
-
-query m:bitstring, k_A:key; event(message_received_B_unencrypted(m, k_A)) && event(attacker_uses_A_identitty(m)) ==> false.
-
-
-(* Process *)
+(* Main Process *)
 process
     new k_A: key;
-    new msg:bitstring;
-    new msg2:bitstring;
-    (!peerA(msg, k_A) | !peerB(k_A, msg) | !adversary(msg2) | !peerB_unencrypted(k_A))
-
+    new sci_A: bitstring;
+    new msg: bitstring;
+    insert freshness(sci_A, 1); 
+    (!peerA(msg, sci_A, k_A, 2) | !peerB(sci_A, k_A) | !peerC_replay())
