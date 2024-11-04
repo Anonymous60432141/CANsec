@@ -15,70 +15,79 @@ equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
 equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
 
 (* Table to store freshness values to prevent replay attacks *)
-table freshness(bitstring, nat).
+table freshness(bitstring, nat, nat).
+(* Table to store the keys based on secure channel identifier and and key counter *)
 table key_counter(bitstring, nat, key).
 
 (* Events to track message sending, receiving, and replay detection *)
-event message_received_Bob(bitstring, nat).
-event message_send_Alice(bitstring, nat).
-event replay_attack(bitstring, nat).
-event replay_msg(bitstring, nat).
+event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
+event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
+event replay_attack(bitstring, nat).            (* Event to signal a replay attack. *)
+event replay_msg(bitstring, nat).               (* Event to track messages replayed by the attacker. *)
+event damian_intercepted(bitstring, nat).       (* Event when Damian intercepts a message. *)
+event damian_sends_bob(bitstring, nat).         (* Event for when Damian tries to send a message to Bob. *)
 
 (* Alice sends a message to Peer B *)
 let Alice(m: bitstring, sci_A: bitstring, szk: key, packet_number: nat, kc:nat) =
+    (* Generate a session key by applying the key derivation function on Alice's secret key and key counter. *)
     let sak_alice = kdf(szk, kc+1) in
     let msg = enc(m, sak_alice) in
     let icv = hmac(msg, kc+1, packet_number, sak_alice) in
+    (* Triggering the msg send event by Alice *)
     event message_send_Alice(m, packet_number);
+    (* Msg is sent in the secure channel A *)
     out(scA, (sci_A, kc+1, packet_number, msg, icv)).
 
 (* Bob receives and verifies the message from Peer A *)
 let Bob(sci_A: bitstring, szk: key) =
     in(scA, (sci: bitstring, kc:nat, packet_number: nat, x: bitstring, icv: bitstring));
-    get freshness(sci, fv) suchthat fv >= packet_number in 0 else
-        get key_counter(sci, k, old_key) suchthat k >= kc in
+    (* Verifying the freshness *)
+    get freshness(channel_id, k, fv) suchthat channel_id = sci && k = kc && fv >= packet_number in 0 else
+        (* Checking if the key for the couter is alredy present or not *)
+        get key_counter(sc, k, old_key) suchthat sc = sci && k >= kc in
+            (* Checking for the icv value *)
             if sci = sci_A && icv = hmac(x, kc, packet_number, old_key) then
                 let received_msg = dec(x, old_key) in
-                insert freshness(sci_A, packet_number);
+                insert freshness(sci_A, kc, packet_number);
                 event message_received_Bob(received_msg, packet_number)
             else
                 event replay_attack(sci, packet_number)
         else
-            let key = kdf(szk, kc) in
-            if sci = sci_A && icv = hmac(x, kc, packet_number, key) then
-                let received_msg = dec(x, key) in
-                insert freshness(sci_A, packet_number);
-                insert key_counter(sci_A, kc, key);
+        (* If key is not present then the key is calculated and stored in the keycounter table *)
+            let key_A = kdf(szk, kc) in
+            if sci = sci_A && icv = hmac(x, kc, packet_number, key_A) then
+                let received_msg = dec(x, key_A) in
+                insert freshness(sci_A, kc, 1);
+                insert key_counter(sci_A, kc, key_A);
                 event message_received_Bob(received_msg, packet_number)
             else
                 event replay_attack(sci, packet_number).
 
-(* Charlie attempts a replay attack *)
+(* Charlie is an external attacker attempts a replay attack *)
 let Charlie() =
     in(scA, (sci: bitstring, packet_number: nat, x: bitstring, icv: bitstring));
     event replay_msg(sci, packet_number);  
     out(scA, (sci, packet_number+10, x, icv)).
 
+
 (* Confidentiality Query: Ensure the attacker cannot learn the message *)
 query m: bitstring, packet_number: nat;
     event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
 
-(* Authentication Query: Ensure every message received was actually sent *)
+(* Authentication Query *)
 query m: bitstring, packet_number: nat;
-    event(message_received_Bob(m, packet_number)) ==> event(message_send_Alice(m, packet_number)).
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
 
-(* Replay Attack Query: Ensure no message is accepted after a replay attack *)
+(* Replay Attack Query *)
 query sci: bitstring, packet_number: nat;
     event(replay_attack(sci, packet_number)) ==> event(replay_msg(sci, packet_number)).
+
 
 (* Main Process *)
 process
     new szk: key;
     new sci_A: bitstring;
     new msg: bitstring;
-    insert freshness(sci_A, 1); 
+    insert freshness(sci_A, 1, 1); 
     insert key_counter(sci_A, 0, szk);
-    (!Alice(msg, sci_A, szk, 2, 1) | !Bob(sci_A, szk) | !Charlie())
-    
-
-    
+    (!Alice(msg, sci_A, szk, 2, 1) | !Bob(sci_A, szk) | !Charlie()) 
