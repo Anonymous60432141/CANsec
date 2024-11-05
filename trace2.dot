@@ -1,0 +1,182 @@
+digraph {
+graph [ordering = out]
+edge [arrowhead = none, penwidth = 1.6, fontsize = 30]
+node [shape = point, width = 0, height = 0, fontsize = 30]
+Trace<br/>
+[label = <A trace has been found.<br/>
+>, shape = plaintext]
+P0__0 [label = "Honest Process", shape = plaintext]
+P__0 [label = "Attacker", shape = plaintext]
+Trace -> P0__0 [label = "", style = invisible, weight = 100]{rank = same; P0__0 P__0}
+P0__0 -> P0__1 [label = <>, weight = 100]
+P0__1 -> P0__2 [label = <>, weight = 100]
+P0__2 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{1}</FONT><FONT COLOR="blue">new </FONT>szk_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{2}</FONT><FONT COLOR="blue">new </FONT>sci_A_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{3}</FONT><FONT COLOR="blue">new </FONT>msg_2</TD></TR><TR><TD><FONT COLOR="darkgreen">{4}</FONT><FONT COLOR="blue">insert </FONT>freshness(sci_A_3,0,0)</TD></TR><TR><TD><FONT COLOR="darkgreen">{5}</FONT><FONT COLOR="blue">insert </FONT>key_counter(sci_A_3,0,szk_3)</TD></TR></TABLE>>]
+P0__2 -> P0__3 [label = <>, weight = 100]
+P__0 -> P__1 [label = <>, weight = 100]
+{rank = same; P__1 P0__2}
+/*RPar */
+P0__3 -> P0_1__3 [label = <>]
+P0__3 -> P0_0__3 [label = <>]
+P0__3 [label = "", fixedsize = false, width = 0, height = 0, shape = none]
+{rank = same; P0_0__3 P0_1__3}
+P0_0__3 [label = "!", shape = ellipse]
+{rank = same; P0_0_1__3 P0_0_0__3}
+P0_0_1__3 [label = "", fixedsize = false, width = 0, height = 0, shape = none]
+P0_0__3 -> P0_0_1__3 [label = <>]
+P0_0_0__3 [label = "", fixedsize = false, width = 0, height = 0, shape = none]
+P0_0__3 -> P0_0_0__3 [label = <>]
+P0_0_0__3 -> P0_0_0__4 [label = <>, weight = 100]
+P0_0_0__4 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD>Beginning of process <FONT COLOR="darkgreen">Bob</FONT></TD></TR></TABLE>>]
+P0_0_0__4 -> P0_0_0__5 [label = <>, weight = 100]
+P0_0_1__3 -> P0_0_1__4 [label = <>, weight = 100]
+P0_0_1__4 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD>Beginning of process <FONT COLOR="darkgreen">Bob</FONT></TD></TR></TABLE>>]
+P0_0_1__4 -> P0_0_1__5 [label = <>, weight = 100]
+P0_1__3 [label = "!", shape = ellipse]
+{rank = same; P0_1_1__3 P0_1_0__3}
+P0_1_1__3 [label = "", fixedsize = false, width = 0, height = 0, shape = none]
+P0_1__3 -> P0_1_1__3 [label = <>]
+P0_1_0__3 [label = "", fixedsize = false, width = 0, height = 0, shape = none]
+P0_1__3 -> P0_1_0__3 [label = <>]
+P0_1_0__3 -> P0_1_0__4 [label = <>, weight = 100]
+P0_1_0__4 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD>Beginning of process <FONT COLOR="darkgreen">Alice</FONT></TD></TR><TR><TD><FONT COLOR="darkgreen">{10}</FONT><FONT COLOR="blue">let</FONT> kc: nat = 1</TD></TR><TR><TD><FONT COLOR="darkgreen">{9}</FONT><FONT COLOR="blue">let</FONT> szk_1: key = szk_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{11}</FONT><FONT COLOR="blue">let</FONT> sak_alice: key = kdf(szk_3,1)</TD></TR></TABLE>>]
+P0_1_0__4 -> P0_1_0__5 [label = <>, weight = 100]
+P0_1_0__5 -> P0_1_0__6 [label = <>, weight = 100]
+P0_0_1__5 -> P0_0_1__6 [label = <>, weight = 100]
+P0_0_0__5 -> P0_0_0__6 [label = <>, weight = 100]
+P__1 -> P__2 [label = <>, weight = 100]
+{rank = same; P__2 P0_0_0__6 P0_0_1__6 P0_1_0__6}
+P0_1_0__6 -> P0_1_0__7 [label = <>, weight = 100]
+P__2 -> P__3 [label = <>, weight = 100]
+{rank = same; P__3 P0_1_0__7}
+P0_1_0__7 -> P__3 [label = <~M = kdf(szk_3,1)>, arrowhead = normal]
+P0_1_0__7 -> P0_1_0__8 [label = <>, weight = 100]
+P0_0_1__6 -> P0_0_1__7 [label = <>, weight = 100]
+P0_0_0__6 -> P0_0_0__7 [label = <>, weight = 100]
+P__3 -> P__4 [label = <>, weight = 100]
+{rank = same; P__4 P0_0_0__7 P0_0_1__7 P0_1_0__8}
+P0_1_0__8 -> P0_1_0__9 [label = <>, weight = 100]
+P0_1_0__9 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{13}</FONT><FONT COLOR="blue">new </FONT>randomness_2</TD></TR><TR><TD><FONT COLOR="darkgreen">{14}</FONT><FONT COLOR="blue">let</FONT> icv: bitstring = hmac(randomness_2,1,1,<br/>
+kdf(szk_3,1))</TD></TR><TR><TD><FONT COLOR="darkgreen">{8}</FONT><FONT COLOR="blue">let</FONT> sci_A_1: bitstring = sci_A_3</TD></TR></TABLE>>]
+P0_1_0__9 -> P0_1_0__10 [label = <>, weight = 100]
+P0_1_0__10 -> P0_1_0__11 [label = <>, weight = 100]
+P0_0_1__7 -> P0_0_1__8 [label = <>, weight = 100]
+P0_0_0__7 -> P0_0_0__8 [label = <>, weight = 100]
+P__4 -> P__5 [label = <>, weight = 100]
+{rank = same; P__5 P0_0_0__8 P0_0_1__8 P0_1_0__11}
+P0_1_0__11 -> P0_1_0__12 [label = <>, weight = 100]
+P__5 -> P__6 [label = <>, weight = 100]
+{rank = same; P__6 P0_1_0__12}
+P0_1_0__12 -> P__6 [label = <(~M_1,1,1,~M_2,~M_3) = (sci_A_3,1,1,enc(randomness_2,<br/>
+kdf(szk_3,1)),hmac(randomness_2,1,1,kdf(szk_3,<br/>
+1)))>, arrowhead = normal]
+P0_1_0__12 -> P0_1_0__13 [label = <>, weight = 100]
+P0_0_1__8 -> P0_0_1__9 [label = <>, weight = 100]
+P0_0_0__8 -> P0_0_0__9 [label = <>, weight = 100]
+P__6 -> P__7 [label = <>, weight = 100]
+{rank = same; P__7 P0_0_0__9 P0_0_1__9 P0_1_0__13}
+P0_1_0__13 -> P0_1_0__14 [label = <>, weight = 100]
+P0_1_0__14 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{16}</FONT><FONT COLOR="blue">let</FONT> packet_number: nat = 2</TD></TR><TR><TD><FONT COLOR="darkgreen">{7}</FONT><FONT COLOR="blue">let</FONT> m: bitstring = msg_2</TD></TR><TR><TD><FONT COLOR="darkgreen">{19}</FONT><FONT COLOR="blue">event</FONT> message_send_Alice(msg_2,2): blocks</TD></TR></TABLE>>]
+P0_1_0__14 -> P0_1_0__15 [label = <>, weight = 100]
+P0_1_0__16 [label = "", width = 0.3, height = 0.3]
+P0_1_0__15 -> P0_1_0__16 [label = <>, weight = 100]
+P0_1_1__3 -> P0_1_1__4 [label = <>, weight = 100]
+P0_1_1__4 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD>Beginning of process <FONT COLOR="darkgreen">Alice</FONT></TD></TR><TR><TD><FONT COLOR="darkgreen">{10}</FONT><FONT COLOR="blue">let</FONT> kc: nat = 1</TD></TR><TR><TD><FONT COLOR="darkgreen">{9}</FONT><FONT COLOR="blue">let</FONT> szk_1: key = szk_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{11}</FONT><FONT COLOR="blue">let</FONT> sak_alice: key = kdf(szk_3,1)</TD></TR></TABLE>>]
+P0_1_1__4 -> P0_1_1__5 [label = <>, weight = 100]
+P0_1_1__5 -> P0_1_1__6 [label = <>, weight = 100]
+P0_1_0__17 [label = "", style = invisible]
+P0_1_0__16 -> P0_1_0__17 [label = <>, weight = 100, style = invisible]
+P0_0_1__9 -> P0_0_1__10 [label = <>, weight = 100]
+P0_0_0__9 -> P0_0_0__10 [label = <>, weight = 100]
+P__7 -> P__8 [label = <>, weight = 100]
+{rank = same; P__8 P0_0_0__10 P0_0_1__10 P0_1_0__17 P0_1_1__6}
+P0_1_1__6 -> P0_1_1__7 [label = <>, weight = 100]
+P__8 -> P__9 [label = <>, weight = 100]
+{rank = same; P__9 P0_1_1__7}
+P0_1_1__7 -> P__9 [label = <~M_4 = kdf(szk_3,1)>, arrowhead = normal]
+P0_1_1__7 -> P0_1_1__8 [label = <>, weight = 100]
+P0_1_0__18 [label = "", style = invisible]
+P0_1_0__17 -> P0_1_0__18 [label = <>, weight = 100, style = invisible]
+P0_0_1__10 -> P0_0_1__11 [label = <>, weight = 100]
+P0_0_0__10 -> P0_0_0__11 [label = <>, weight = 100]
+P__9 -> P__10 [label = <>, weight = 100]
+{rank = same; P__10 P0_0_0__11 P0_0_1__11 P0_1_0__18 P0_1_1__8}
+P0_1_1__8 -> P0_1_1__9 [label = <>, weight = 100]
+P0_1_1__9 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{13}</FONT><FONT COLOR="blue">new </FONT>randomness_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{14}</FONT><FONT COLOR="blue">let</FONT> icv: bitstring = hmac(randomness_3,1,1,<br/>
+kdf(szk_3,1))</TD></TR><TR><TD><FONT COLOR="darkgreen">{8}</FONT><FONT COLOR="blue">let</FONT> sci_A_1: bitstring = sci_A_3</TD></TR></TABLE>>]
+P0_1_1__9 -> P0_1_1__10 [label = <>, weight = 100]
+P0_1_1__10 -> P0_1_1__11 [label = <>, weight = 100]
+P0_1_0__19 [label = "", style = invisible]
+P0_1_0__18 -> P0_1_0__19 [label = <>, weight = 100, style = invisible]
+P0_0_1__11 -> P0_0_1__12 [label = <>, weight = 100]
+P0_0_0__11 -> P0_0_0__12 [label = <>, weight = 100]
+P__10 -> P__11 [label = <>, weight = 100]
+{rank = same; P__11 P0_0_0__12 P0_0_1__12 P0_1_0__19 P0_1_1__11}
+P0_1_1__11 -> P0_1_1__12 [label = <>, weight = 100]
+P__11 -> P__12 [label = <>, weight = 100]
+{rank = same; P__12 P0_1_1__12}
+P0_1_1__12 -> P__12 [label = <(~M_5,1,1,~M_6,~M_7) = (sci_A_3,1,1,enc(randomness_3,<br/>
+kdf(szk_3,1)),hmac(randomness_3,1,1,kdf(szk_3,<br/>
+1)))>, arrowhead = normal]
+P0_1_1__12 -> P0_1_1__13 [label = <>, weight = 100]
+P0_1_0__20 [label = "", style = invisible]
+P0_1_0__19 -> P0_1_0__20 [label = <>, weight = 100, style = invisible]
+P0_0_1__12 -> P0_0_1__13 [label = <>, weight = 100]
+P0_0_0__12 -> P0_0_0__13 [label = <>, weight = 100]
+P__12 -> P__13 [label = <>, weight = 100]
+{rank = same; P__13 P0_0_0__13 P0_0_1__13 P0_1_0__20 P0_1_1__13}
+P0_1_1__13 -> P0_1_1__14 [label = <>, weight = 100]
+P0_1_1__14 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{16}</FONT><FONT COLOR="blue">let</FONT> packet_number: nat = 2</TD></TR><TR><TD><FONT COLOR="darkgreen">{7}</FONT><FONT COLOR="blue">let</FONT> m: bitstring = msg_2</TD></TR><TR><TD><FONT COLOR="darkgreen">{19}</FONT><FONT COLOR="blue">event</FONT> message_send_Alice(msg_2,2): blocks</TD></TR></TABLE>>]
+P0_1_1__14 -> P0_1_1__15 [label = <>, weight = 100]
+P0_1_1__16 [label = "", width = 0.3, height = 0.3]
+P0_1_1__15 -> P0_1_1__16 [label = <>, weight = 100]
+P0_0_1__13 -> P0_0_1__14 [label = <>, weight = 100]
+P0_0_0__13 -> P0_0_0__14 [label = <>, weight = 100]
+P__13 -> P__14 [label = <>, weight = 100]
+{rank = same; P__14 P0_0_0__14 P0_0_1__14}
+P0_0_1__14 -> P0_0_1__15 [label = <>, weight = 100]
+P__14 -> P__15 [label = <>, weight = 100]
+{rank = same; P__15 P0_0_1__15}
+P0_0_1__15 -> P__15 [label = <(~M_1,1,1,a_2,hmac(a_2,1,1,~M)) = (sci_A_3,1,1,<br/>
+a_2,hmac(a_2,1,1,kdf(szk_3,1)))>, dir = back, arrowhead = normal]
+P0_0_1__15 -> P0_0_1__16 [label = <>, weight = 100]
+P0_0_0__14 -> P0_0_0__15 [label = <>, weight = 100]
+P__15 -> P__16 [label = <>, weight = 100]
+{rank = same; P__16 P0_0_0__15 P0_0_1__16}
+P0_0_1__16 -> P0_0_1__17 [label = <>, weight = 100]
+P0_0_1__17 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{22}</FONT><FONT COLOR="blue">let</FONT> sci_A_2: bitstring = sci_A_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{34}</FONT><FONT COLOR="blue">get</FONT> key_counter(=sci_A_3,=1,ska_A: key): else<br/>
+branch taken</TD></TR><TR><TD><FONT COLOR="darkgreen">{23}</FONT><FONT COLOR="blue">let</FONT> szk_2: key = szk_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{30}</FONT><FONT COLOR="blue">let</FONT> n_key: key = kdf(szk_3,1)</TD></TR><TR><TD><FONT COLOR="darkgreen">{31}</FONT><FONT COLOR="blue">if</FONT> ((sci_A_3 = sci_A_3) &amp;&amp; ((1 = 1)<br/>
+&amp;&amp; (hmac(a_2,1,1,kdf(szk_3,1)) = hmac(<br/>
+a_2,1,1,kdf(szk_3,1)))))</TD></TR><TR><TD><FONT COLOR="darkgreen">{32}</FONT><FONT COLOR="blue">insert </FONT>freshness(sci_A_3,1,1)</TD></TR><TR><TD><FONT COLOR="darkgreen">{33}</FONT><FONT COLOR="blue">insert </FONT>key_counter(sci_A_3,1,kdf(szk_3,1))<br/>
+</TD></TR></TABLE>>]
+P0_0_1__17 -> P0_0_1__18 [label = <>, weight = 100]
+P__16 -> P__17 [label = <>, weight = 100]
+{rank = same; P__17 P0_0_1__17}
+P0_0_1__19 [label = "", width = 0.3, height = 0.3]
+P0_0_1__18 -> P0_0_1__19 [label = <>, weight = 100]
+P0_0_0__15 -> P0_0_0__16 [label = <>, weight = 100]
+P__17 -> P__18 [label = <>, weight = 100]
+{rank = same; P__18 P0_0_0__16}
+P0_0_0__16 -> P0_0_0__17 [label = <>, weight = 100]
+P__18 -> P__19 [label = <>, weight = 100]
+{rank = same; P__19 P0_0_0__17}
+P0_0_0__17 -> P__19 [label = <~X_1>, dir = back, arrowhead = normal]
+P0_0_0__17 -> P0_0_0__18 [label = <>, weight = 100]
+P__19 -> P__20 [label = <>, weight = 100]
+{rank = same; P__20 P0_0_0__18}
+P0_0_0__18 -> P0_0_0__19 [label = <>, weight = 100]
+P0_0_0__19 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{22}</FONT><FONT COLOR="blue">let</FONT> sci_A_2: bitstring = sci_A_3</TD></TR><TR><TD><FONT COLOR="darkgreen">{34}</FONT><FONT COLOR="blue">get </FONT>key_counter(sci_A_3,1,kdf(szk_3,1))</TD></TR><TR><TD><FONT COLOR="darkgreen">{29}</FONT><FONT COLOR="blue">get</FONT> freshness(=sci_A_3,=1,fv: nat) <FONT COLOR="blue">suchthat</FONT><br/>
+(fv &ge; a): else branch taken</TD></TR><TR><TD><FONT COLOR="darkgreen">{25}</FONT><FONT COLOR="blue">if</FONT> ((sci_A_3 = sci_A_3) &amp;&amp; (hmac(enc(<br/>
+a_1,kdf(szk_3,1)),1,a,kdf(szk_3,1)) = hmac(enc(<br/>
+a_1,kdf(szk_3,1)),1,a,kdf(szk_3,1))))</TD></TR><TR><TD><FONT COLOR="darkgreen">{27}</FONT><FONT COLOR="blue">insert </FONT>freshness(sci_A_3,1,a)</TD></TR><TR><TD><FONT COLOR="darkgreen">{26}</FONT><FONT COLOR="blue">let</FONT> received_msg: bitstring = dec(enc(a_1,<br/>
+kdf(szk_3,1)),kdf(szk_3,1))</TD></TR></TABLE>>]
+P0_0_0__19 -> P0_0_0__20 [label = <>, weight = 100]
+P__20 -> P__21 [label = <>, weight = 100]
+{rank = same; P__21 P0_0_0__19}
+P0_0_0__20 -> P0_0_0__21 [label = <>, weight = 100]
+P0_0_0__21 [color = red, shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{28}</FONT><FONT COLOR="blue">event</FONT> message_received_Bob(dec(enc(a_1,kdf(<br/>
+szk_3,1)),kdf(szk_3,1)),a)</TD></TR></TABLE>>]
+P0_0_0__21 -> P0_0_0__22 [label = <>, weight = 100]
+Abbrev [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><TR> <TD> Abbreviations </TD></TR><TR><TD>~X_1 = (~M_1,1,a,enc(a_1,~M),hmac(enc(a_1,~M),1,a,~M))<br/>
+=<br/>
+(sci_A_3,1,a,enc(a_1,kdf(szk_3,1)),hmac(enc(<br/>
+a_1,kdf(szk_3,1)),1,a,kdf(szk_3,1)))</TD></TR></TABLE>>]Abbrev -> P__0 [style = invisible, weight =100]}

@@ -1,119 +1,73 @@
 set traceDisplay = long.
 
-(* Define types *)
+(* Define key type and secure communication channel *)
 type key.
-type secure_channel.
-
-(* Secure Channel *)
 free scA: channel.
 
-(* Channel identifiers *)
-free sci_A: bitstring.
-
-(* Constructors and destructors for CANsec operations *)
+(* Encryption, Decryption, and HMAC functions *)
 fun enc(bitstring, key): bitstring.
 fun dec(bitstring, key): bitstring.
 fun hmac(bitstring, nat, nat, key): bitstring.
-fun kdf(key, nat):key.
-(* Equations for encryption and decryption *)
+fun kdf(key, nat): key.
+
+(* Symmetric encryption and decryption equations *)
 equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
 
-(* Tables for freshness and interception logging *)
-table freshness(bitstring, nat, nat).  (* sci_A, packet_number *)
-table key_counter(bitstring, nat, key).  (* sci_A, key_counter, key *)
+(* Tables holding freshness and key counter values for all peers *)
+table freshness(bitstring, nat, nat).
+table key_counter(bitstring, nat, key).
 
-(* Events to track various actions and potential attacks *)
-event message_received_Bob(bitstring, nat).    (* Event triggered when Bob successfully receives and decrypts a message *)
-event charlie_intercepted(bitstring).          (* Event triggered when Charlie intercepts and decrypts a message *)
-event message_send_Alice(bitstring, nat).      (* Event triggered when Alice sends a message *)
-event replay_attack(bitstring).                (* Event triggered when a replay attack is detected *)
-event replay_msg(bitstring).                   (* Event triggered when a replay message is sent *)
+(* Events marking message exchange between Alice and Bob *)
+event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
+event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
 
-
-(* Alice sends a message to Bob *)
-let Alice(m: bitstring, sci_A: bitstring, szk: key, packet_number: nat, kc:nat, revoke:nat) =
-    let k_A = kdf(szk, kc+1) in
-    let msg = enc(m, k_A) in
-    let icv = hmac(msg, kc+1, packet_number, k_A) in
+(* Process representing Alice sending a message to Bob *)
+let Alice(m: bitstring, sci_A: bitstring, szk: key, kc: nat) =
+    let sak_alice = kdf(szk, kc) in
+    out(scA, sak_alice);
+    new randomness:bitstring;
+    let icv = hmac(randomness, kc, 1, sak_alice) in
+    out(scA, (sci_A, kc, 1, enc(randomness, sak_alice), icv));
+    let packet_number = 2 in
+    let msg = enc(m, sak_alice) in
+    let icv2 = hmac(msg, kc, packet_number, sak_alice) in
     event message_send_Alice(m, packet_number);
-    out(scA, (sci_A, packet_number, kc+1, msg, icv, revoke)).
+    out(scA, (sci_A, kc, packet_number, msg, icv2)).
 
-(* Bob receives and verifies the message from Alice *)
-let Bob(sci_A: bitstring, szk: key, revoke:nat) =
-    in(scA, (sci: bitstring, kc:nat, packet_number: nat, x: bitstring, icv: bitstring));
-    (* Verifying the freshness *)
-    get freshness(channel_id, k, fv) suchthat channel_id = sci && k = kc && fv >= packet_number in 0 else
-        (* Checking if the key for the couter is alredy present or not *)
-        get key_counter(sc, k, old_key) suchthat sc = sci && k >= kc in
-            (* Checking for the icv value *)
-            if sci = sci_A && icv = hmac(x, kc, packet_number, old_key) then
-                let received_msg = dec(x, old_key) in
+(* Process representing Bob receiving and verifying a message from Alice *)
+let Bob(sci_A: bitstring, szk: key) =
+    in(scA, (sci: bitstring, kc: nat, packet_number: nat, x: bitstring, icv: bitstring));
+    get key_counter(=sci, =kc, ska_A) in
+        (get freshness(=sci, =kc, fv) suchthat fv >= packet_number in 0 else(
+            if sci = sci_A && icv = hmac(x, kc, packet_number, ska_A) then
+                (let received_msg = dec(x, ska_A) in
                 insert freshness(sci_A, kc, packet_number);
-                event message_received_Bob(received_msg, packet_number)
-            else
-                event replay_attack(sci)
+                event message_received_Bob(received_msg, packet_number))
+            else 0)
+        )
         else
-        (* If key is not present then the key is calculated and stored in the keycounter table *)
-            let key_A = kdf(szk, kc) in
-            if sci = sci_A && icv = hmac(x, kc, packet_number, key_A) then
-                let received_msg = dec(x, key_A) in
-                insert freshness(sci_A, kc, 1);
-                insert key_counter(sci_A, kc, key_A);
-                event message_received_Bob(received_msg, packet_number)
-            else
-                event replay_attack(sci).
+            (let n_key = kdf(szk, kc) in 
+            if sci = sci_A && packet_number=1 && icv = hmac(x, kc, packet_number, n_key) then
+            (
+                insert freshness(sci_A, kc, packet_number);
+                insert key_counter(sci_A, kc, n_key)
+            )
+            else 0).
 
+(* Confidentiality query: Ensure messages cannot be intercepted *)
+query m: bitstring, packet_number: nat;
+    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
 
-(* Charlie trying to get the encrypted msg from the communication between Alice and Bob *)
-let Charlie_eavesdrop(szk:key, revoke_C:nat) =
-    in(scA, (sci: bitstring, packet_number: nat, kc:nat, x: bitstring, icv: bitstring, revoke_A:nat));
-    let k_A = kdf(szk, kc) in
-    if sci = sci_A then
-        event charlie_intercepted(dec(x, k_A)).
+(* Authentication query to prevent replay attacks *)
+query m: bitstring, packet_number: nat;
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
 
-(* Charlie sending msg to Bob pretending to be Alice *)
-let Charlie(szk: key, replay_fresh: nat, sci_A: bitstring, kc:nat, revoke:nat) =
-    new m: bitstring;  
-    let k_A = kdf(szk, kc+10) in
-    let msg = enc(m, k_A) in
-    let icv = hmac(msg, kc+10, replay_fresh, k_A) in
-    out(scA, (sci_A, replay_fresh, kc+10, msg, icv, 0)).
-
-(* Charlie trying to replay the msg *)
-let Charlie_replay(szk: key, sci_A: bitstring, revoke:nat) =
-    in(scA, (sci: bitstring, packet_number: nat, kc:nat, x: bitstring, icv: bitstring));
-    let k_A = kdf(szk, kc) in 
-    let replay_fresh = packet_number + 10 in
-    let new_icv = hmac(x, kc, replay_fresh, k_A) in
-    event replay_msg(sci);
-    out(scA, (sci_A, replay_fresh, kc, x, new_icv, 0)).
-
-(* Security Queries for Confidentiality and Authenticity *)
-
-(* Confidentiality Query: Ensure that if Bob receives a message, it was not intercepted by Charlie *)
-query msg: bitstring, packet_number:nat;
-    event(charlie_intercepted(msg)) && event(message_received_Bob(msg, packet_number)) ==> false.
-
-(* Authenticity Query *)
-query msg: bitstring, packet_number:nat;
-    inj-event(message_received_Bob(msg, packet_number)) ==> inj-event(message_send_Alice(msg, packet_number)).
-
-(* Replay *)
-query received_msg: bitstring, sci: bitstring, packet_number: nat;
-    event(message_received_Bob(received_msg, packet_number)) && event(replay_msg(sci)) ==> false.
-
-(* Main Process *)
+(* Main process to simulate message exchange between Alice and Bob *)
 process
     new szk: key;
+    new sci_A: bitstring;
     new msg: bitstring;
     insert freshness(sci_A, 0, 0); 
     insert key_counter(sci_A, 0, szk);
-    (!Alice(msg, sci_A, szk, 1, 1, 0) | !Bob(sci_A, szk, 0) | !Charlie_eavesdrop(szk, 0) | 
-    !Charlie(szk, 1, sci_A, 2, 0) | !Charlie_replay(szk, sci_A, 0)) |
-    
-    (* Assuming that there was some method of finding that there is a internal attacker 
-    and it is revoked by changing its state to 1 *)
-    
-    phase 1;
-    (!Alice(msg, sci_A, szk, 1, 3, 0) | !Bob(sci_A, szk, 0) | !Charlie_eavesdrop(szk, 1) | 
-    !Charlie(szk, 1, sci_A, 2, 1) | !Charlie_replay(szk, sci_A, 1))
+    (!Alice(msg, sci_A, szk, 1) | !Bob(sci_A, szk))
