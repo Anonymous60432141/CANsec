@@ -1,88 +1,61 @@
 set traceDisplay = long.
 
-(* Define types *)
+(* Define key type and channels *)
 type key.
-type secure_channel.
-
-(* Secure Channel *)
 free scA: channel.
 
-(* Channel identifiers *)
-free sci_A: bitstring.
-
-(* Constructors and destructors for CANsec operations *)
+(* Encryption, Decryption, and HMAC functions *)
 fun enc(bitstring, key): bitstring.
 fun dec(bitstring, key): bitstring.
-fun hmac(bitstring, nat, key): bitstring.
+fun hmac(bitstring, bitstring, nat, nat, key): bitstring.
 
-(* Equations for encryption and decryption *)
+(* Equations for symmetric encryption and decryption *)
 equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
 
-(* Tables for freshness and interception logging *)
-table freshness(bitstring, nat).  (* sci_A, fresh *)
+(* Table to store association keys *)
+table association_keys(bitstring, nat, key).
+table freshness(bitstring, nat).
 
-(* Events *)
+(* Events to track message sending and receiving *)
 event message_received_B(bitstring, nat).
-event peerC_intercepted(bitstring).
-event peerC_sends_B(bitstring).
 event message_send_A(bitstring, nat).
-event replay_attack(bitstring).
-event replay_msg(bitstring).
 
 (* Peer A sends a message to Peer B *)
-let peerA(m: bitstring, sci_A: bitstring, k_A: key, fresh: nat) =
-    let msg = enc(m, k_A) in
-    let icv = hmac(msg, fresh, k_A) in
-    event message_send_A(m, fresh);
-    out(scA, (sci_A, fresh, msg, icv)).
+let Alice(m: bitstring, sci_A: bitstring, fresh: nat, an: nat) =
+    get association_keys(=sci_A, =an, k_A) in
+        let msg = enc(m, k_A) in
+        let icv = hmac(sci_A, msg, fresh, an, k_A) in
+        event message_send_A(m, fresh);
+        out(scA, (sci_A, an, fresh, msg, icv)).
 
 (* Peer B receives and verifies the message from Peer A *)
-let peerB(sci_A: bitstring, k_A: key) =
-    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
-    get freshness(sci, fv) suchthat fv >= fresh in 0 else
-        if sci = sci_A && icv = hmac(x, fresh, k_A) then
-            let received_msg = dec(x, k_A) in
-            insert freshness(sci_A, fresh);
-            event message_received_B(received_msg, fresh)
-        else
-            event replay_attack(sci).
+let Bob() = 
+    in(scA, (sci: bitstring, an: nat, fresh: nat, x: bitstring, icv: bitstring));
+    get association_keys(=sci, =an, sak) in
+        if icv = hmac(sci, x, fresh, an, sak) then (
+            get freshness(=sci, fv) suchthat fv>=fresh in 0 else(
+                insert freshness(sci, fresh); 
+                let received_msg = dec(x, sak) in
+                event message_received_B(received_msg, fresh)
+            )
+        ) else 0.
 
-let peerC_eavesdrop(k_A:key) =
-    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
-    if sci = sci_A then
-        event peerC_intercepted(dec(x, k_A)).
 
-let peerC(k_A: key, replay_fresh: nat, sci_A: bitstring) =
-    new m: bitstring;  
-    let msg = enc(m, k_A) in
-    let icv = hmac(msg, replay_fresh, k_A) in
-    event peerC_sends_B(m);
-    out(scA, (sci_A, replay_fresh, msg, icv)).
+(* Confidentiality Query: Ensure the attacker cannot learn the message *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) && attacker(m) ==> false.
 
-let peerC_replay(k_A: key, sci_A: bitstring) =
-    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
-    let replay_fresh = fresh + 10 in
-    let new_icv = hmac(x, replay_fresh, k_A) in
-    event replay_msg(sci);
-    out(scA, (sci_A, replay_fresh, x, new_icv)).
-
-(* Security Queries for Confidentiality and Authenticity *)
-
-(* Confidentiality Query: Ensure that if peerB receives a message, it was not intercepted by peerC *)
-query msg: bitstring, fresh:nat;
-    event(peerC_intercepted(msg)) && event(message_received_B(msg, fresh)) ==> false.
-
-(* Authenticity Query *)
-query msg: bitstring, fresh:nat;
-    event(message_received_B(msg, fresh)) && event(peerC_sends_B(msg)) ==> false.
-
-(* Replay *)
-query received_msg: bitstring, sci: bitstring, fresh: nat;
-    event(message_received_B(received_msg, fresh)) && event(replay_msg(sci)) ==> false.
+(* Authentication Query: Ensure every message received was actually sent *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
 
 (* Main Process *)
 process
     new k_A: key;
+    new sci_A: bitstring;
     new msg: bitstring;
-    insert freshness(sci_A, 0);  
-    (!peerA(msg, sci_A, k_A, 1) | !peerB(sci_A, k_A) | !peerC_eavesdrop(k_A) | !peerC(k_A, 100, sci_A) | !peerC_replay(k_A, sci_A))
+    out(scA, k_A);
+    insert association_keys(sci_A, 0, k_A);
+    insert freshness(sci_A, 0);
+    (!Alice(msg, sci_A, 1, 0) | !Bob())

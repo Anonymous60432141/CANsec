@@ -1,78 +1,91 @@
 set traceDisplay = long.
 
-(* Define key type and channel *)
+(* Define key type and secure communication channel *)
 type key.
 free scA: channel.
 
 (* Encryption, Decryption, and HMAC functions *)
 fun enc(bitstring, key): bitstring.
 fun dec(bitstring, key): bitstring.
-fun hmac(bitstring, nat, key): bitstring.
+fun key_enc(key, key): bitstring.
+fun key_dec(bitstring, key): key.
+fun hmac(bitstring, nat, nat, key): bitstring.
+fun kdf(key, nat): key.
 
-(* Equations for symmetric encryption and decryption *)
+(* Symmetric encryption and decryption equations *)
 equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
 equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+equation forall k1: key, k2: key; key_dec(key_enc(k1, k2), k2) = k1.
 
-(* Table to store freshness values to prevent replay attacks *)
-table freshness(bitstring, nat).
-table keys(bitstring, nat, key).
+(* Tables holding freshness and key counter values for all peers *)
+table freshness(bitstring, nat, nat).
+table association_keys(bitstring, nat, key).
 
-(* Events to track message sending, receiving, and replay detection *)
-event message_received_B(bitstring, nat).
-event message_send_A(bitstring, nat).
-event replay_attack(bitstring, nat).
-event replay_msg(bitstring, nat).
+(* Events marking message exchange between Alice and Bob *)
+event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
+event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
 
-(* Key server *)
-let Trant(sci:bitstring, an:nat) =
+
+(* Trusted key server *)
+let Trant(sci_A:bitstring, an:nat, fresh:nat, szk:key) = 
+    let kek = kdf(szk, 10) in
+    let ick = kdf(szk, 20) in 
     new sak:key;
-    insert keys(sci, an, sak).
+    let msg = key_enc(sak, kek) in
+    let icv = hmac(msg, an, 1, ick) in
+    out(scA, (sci_A, an, fresh, msg, icv)).
 
-(* Peer A sends a message to Peer B *)
-let Alice(m: bitstring, sci_A: bitstring, k_A: key, fresh: nat) =
-    let msg = enc(m, k_A) in
-    let icv = hmac(msg, fresh, k_A) in
-    event message_send_A(m, fresh);
-    out(scA, (sci_A, fresh, msg, icv)).
 
-(* Peer B receives and verifies the message from Peer A *)
-let Bob(sci_A: bitstring, k_A: key) =
-    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
-    get freshness(sci, fv) suchthat fv >= fresh in 0 else
-        if sci = sci_A && icv = hmac(x, fresh, k_A) then
-            let received_msg = dec(x, k_A) in
-            insert freshness(sci_A, fresh);
-            event message_received_B(received_msg, fresh)
+(* Process representing Alice sending a message to Bob *)
+let Alice(m: bitstring, sci_A: bitstring, szk: key, an: nat) =
+    get association_keys(=sci_A, =an, sak_alice) in(
+        let packet_number = 2 in
+        let msg = enc(m, sak_alice) in
+        let icv2 = hmac(msg, an, packet_number, sak_alice) in
+        event message_send_Alice(m, packet_number);
+        out(scA, (sci_A, an, packet_number, msg, icv2)))
+    else 0.
+
+
+(* Process representing Bob receiving and verifying a message from Alice *)
+let Bob(sci_A: bitstring, szk: key) =
+    in(scA, (sci: bitstring, an: nat, packet_number: nat, x: bitstring, icv: bitstring));
+    get association_keys(=sci, =an, ska_A) in
+        (get freshness(=sci, =an, fv) suchthat fv >= packet_number in 0 else(
+            if sci = sci_A && icv = hmac(x, an, packet_number, ska_A) then
+                (let received_msg = dec(x, ska_A) in
+                insert freshness(sci_A, an, packet_number);
+                event message_received_Bob(received_msg, packet_number))
+            else 0)
+        )
         else
-            event replay_attack(sci, fresh).
+            ( let n_key = kdf(szk, 20) in
+            if sci = sci_A && packet_number=1 && icv = hmac(x, an, packet_number, n_key) then
+            (
+                let kek = kdf(szk, 10) in
+                let sak = key_dec(x, kek) in
+                insert freshness(sci_A, an, packet_number);
+                insert association_keys(sci_A, an, sak)
+            )
+            else 0).
 
-(* Peer C attempts a replay attack *)
-let Charlie_replay() =
-    in(scA, (sci: bitstring, fresh: nat, x: bitstring, icv: bitstring));
-    event replay_msg(sci, fresh);  
-    out(scA, (sci, fresh+10, x, icv)).
+(* Confidentiality query: Ensure messages cannot be intercepted *)
+query m: bitstring, packet_number: nat;
+    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
 
-(* Confidentiality Query: Ensure the attacker cannot learn the message *)
-query m: bitstring, fresh: nat;
-    event(message_received_B(m, fresh)) && attacker(m) ==> false.
+(* Authentication query to prevent replay attacks *)
+query m: bitstring, packet_number: nat;
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
 
-(* Authentication Query: Ensure every message received was actually sent *)
-query m: bitstring, fresh: nat;
-    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
-
-(* Replay Attack Query: Ensure no message is accepted after a replay attack *)
-query sci: bitstring, fresh: nat;
-    event(replay_attack(sci, fresh)) ==> event(replay_msg(sci, fresh)).
-
-(* Main Process *)
+(* Main process to simulate message exchange between Alice and Bob *)
 process
-    new k_A: key;
+    new szk: key;
     new sci_A: bitstring;
     new msg: bitstring;
-    (* Key distribution phase *)
-    (!Trant(sci_A, 0)) |
+    let an = 0 in
+    insert freshness(sci_A, 0, 0); 
+    insert association_keys(sci_A, 0, szk);
+    (Trant(sci_A, an, 1, szk) | Bob(sci_A, szk))|
     
     phase 1;
-
-    insert freshness(sci_A, 1); 
-    (!Alice(msg, sci_A, k_A, 2) | !Bob(sci_A, k_A) | !Charlie_replay())
+    (!Alice(msg, sci_A, szk, 1) | !Bob(sci_A, szk))
