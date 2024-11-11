@@ -96,9 +96,8 @@ process
     out(scA, szk);                                      (* Sends the secret key on the communication channel 'scA' to mimic the internal attacker *)
     new sci_A: bitstring;                               (* Creates a new session ID for Alice *)
     new msg: bitstring;                                 (* Creates a new message to be sent by Alice *)
-    let an = 0 in                                       (* Initializes association number to 0 *)
+    let an = 1 in                                       (* Initializes association number to 0 *)
     insert freshness(sci_A, 0, 0);                      (* Initializes the freshness table for Alice's session *)
-    insert association_keys(sci_A, 0, szk);             (* Associates the session ID with the key *)
     (!Trant(sci_A, an, 1, szk) | !Bob(sci_A, szk)) |    (* Runs the Trant (trusted server) and Bob processes in parallel *)
 
     phase 1;                                            (* Phase control for message exchange *)

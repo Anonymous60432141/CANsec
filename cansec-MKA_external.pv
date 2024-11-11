@@ -84,9 +84,8 @@ process
     new szk: key;  (* Session key for Alice and Bob *)
     new sci_A: bitstring;  (* Identifier for Alice's secure channel *)
     new msg: bitstring;  (* Message content *)
-    let an = 0 in  (* Initial association number *)
+    let an = 1 in  (* Initial association number *)
     insert freshness(sci_A, 0, 0);  (* Initialize freshness table *)
-    insert association_keys(sci_A, 0, szk);  (* Insert initial association key *)
     (!Trant(sci_A, an, 1, szk) | !Bob(sci_A, szk))|  (* Run Trant and Bob processes in parallel *)
     
     phase 1;  (* Transition to next phase *)
