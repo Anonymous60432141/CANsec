@@ -1,72 +1,73 @@
-set traceDisplay = long.
+set traceDisplay = long.  (* Sets the trace display mode to long for detailed output. *)
 
-(* Define key type and secure communication channel *)
-type key.
-free scA: channel.
+(* Define the key type and secure communication channel *)
+type key.             (* A type representing cryptographic keys *)
+free scA: channel.    (* A secure public channel over which Alice and Bob communicate *)
 
 (* Encryption, Decryption, and HMAC functions *)
-fun enc(bitstring, key): bitstring.
-fun dec(bitstring, key): bitstring.
-fun hmac(bitstring, nat, nat, key): bitstring.
-fun kdf(key, nat): key.
+fun enc(bitstring, key): bitstring.             (* Symmetric encryption function *)
+fun dec(bitstring, key): bitstring.             (* Symmetric decryption function *)
+fun hmac(bitstring, nat, nat, key): bitstring.  (* HMAC function to provide integrity checks *)
+fun kdf(key, nat): key.                         (* Key derivation function *)
 
 (* Symmetric encryption and decryption equations *)
-equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
-equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.   (* Decrypting an encrypted message with the same key yields the original message *)
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.   (* Encrypting a decrypted message with the same key yields the original message *)
 
 (* Tables holding freshness and key counter values for all peers *)
-table freshness(bitstring, nat, nat).
-table key_counter(bitstring, nat, key).
+table freshness(bitstring, nat, nat).     (* Table tracking the latest received freshness value (packet number) for each channel and counter *)
+table key_counter(bitstring, nat, key).   (* Table storing keys derived from the session key and counter values *)
 
 (* Events marking message exchange between Alice and Bob *)
-event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
-event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
+event message_received_Bob(bitstring, nat).  (* Event indicating that Bob successfully received a message *)
+event message_send_Alice(bitstring, nat).    (* Event indicating that Alice sent a message *)
 
 (* Process representing Alice sending a message to Bob *)
 let Alice(m: bitstring, sci_A: bitstring, szk: key, kc: nat) =
-    let sak_alice = kdf(szk, kc) in
-    new randomness:bitstring;
-    let icv = hmac(randomness, kc, 1, sak_alice) in
-    out(scA, (sci_A, kc, 1, enc(randomness, sak_alice), icv));
-    let packet_number = 2 in
-    let msg = enc(m, sak_alice) in
-    let icv2 = hmac(msg, kc, packet_number, sak_alice) in
-    event message_send_Alice(m, packet_number);
-    out(scA, (sci_A, kc, packet_number, msg, icv2)).
+    let sak_alice = kdf(szk, kc) in                   (* Derives the session association key (SAK) using the session key and counter *)
+    new randomness:bitstring;                         (* Generates a new random value for the initial packet *)
+    let icv = hmac(randomness, kc, 1, sak_alice) in   (* Computes the integrity check value (ICV) for the first packet *)
+    out(scA, (sci_A, kc, 1, enc(randomness, sak_alice), icv));   (* Sends the first packet with the encrypted randomness and its ICV *)
+    
+    let packet_number = 2 in                          (* Sets the packet number for the actual message packet *)
+    let msg = enc(m, sak_alice) in                    (* Encrypts the message with the derived session key *)
+    let icv2 = hmac(msg, kc, packet_number, sak_alice) in   (* Computes the ICV for the message packet *)
+    event message_send_Alice(m, packet_number);       (* Triggers the event to indicate that Alice has sent a message *)
+    out(scA, (sci_A, kc, packet_number, msg, icv2)).  (* Sends the message packet with its ICV *)
 
 (* Process representing Bob receiving and verifying a message from Alice *)
 let Bob(sci_A: bitstring, szk: key) =
-    in(scA, (sci: bitstring, kc: nat, packet_number: nat, x: bitstring, icv: bitstring));
-    get key_counter(=sci, =kc, ska_A) in
-        (get freshness(=sci, =kc, fv) suchthat fv >= packet_number in 0 else(
-            if sci = sci_A && icv = hmac(x, kc, packet_number, ska_A) then
-                (let received_msg = dec(x, ska_A) in
-                insert freshness(sci_A, kc, packet_number);
-                event message_received_Bob(received_msg, packet_number))
-            else 0)
+    in(scA, (sci: bitstring, kc: nat, packet_number: nat, x: bitstring, icv: bitstring)); (* Waits to receive a packet from Alice *)
+    get key_counter(=sci, =kc, ska_A) in  (* Retrieves the derived session key from the key counter table if available *)
+        (get freshness(=sci, =kc, fv) suchthat fv >= packet_number in 0 else(  (* Checks freshness to prevent replay attacks *)
+            if sci = sci_A && icv = hmac(x, kc, packet_number, ska_A) then  (* Verifies the packet’s ICV for integrity *)
+                (let received_msg = dec(x, ska_A) in                         (* Decrypts the message *)
+                insert freshness(sci_A, kc, packet_number);                  (* Updates the freshness table with the new packet number *)
+                event message_received_Bob(received_msg, packet_number))     (* Triggers event indicating successful receipt of message *)
+            else 0)   (* If integrity check fails, process terminates *)
         )
         else
-            (let n_key = kdf(szk, kc) in 
+            (let n_key = kdf(szk, kc) in  (* Derives a new session key if packet number indicates a session restart *)
             if sci = sci_A && packet_number=1 && icv = hmac(x, kc, packet_number, n_key) then
             (
-                insert freshness(sci_A, kc, packet_number);
-                insert key_counter(sci_A, kc, n_key)
+                insert freshness(sci_A, kc, packet_number);        (* Updates the freshness table with the new packet number *)
+                insert key_counter(sci_A, kc, n_key)               (* Updates the key counter table with the new session key *)
             )
-            else 0).
+            else 0).  (* Terminates if the packet does not match expectations *)
 
-(* Confidentiality query: Ensure messages cannot be intercepted *)
+(* Confidentiality query: Ensure messages cannot be intercepted by an attacker *)
 query m: bitstring, packet_number: nat;
     event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
 
-(* Authentication query to prevent replay attacks *)
+(* Authentication query to prevent replay attacks: Ensures only messages actually sent by Alice can be received by Bob *)
 query m: bitstring, packet_number: nat;
     inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
 
 (* Main process to simulate message exchange between Alice and Bob *)
 process
-    new szk: key;
-    new sci_A: bitstring;
-    new msg: bitstring;
-    insert freshness(sci_A, 0, 0); 
-    insert key_counter(sci_A, 0, szk);
-    (!Alice(msg, sci_A, szk, 1) | !Bob(sci_A, szk))
+    new szk: key;                     (* Creates a new session key shared between Alice and Bob *)
+    new sci_A: bitstring;             (* Generates a unique identifier for the secure channel *)
+    new msg: bitstring;               (* Creates the message Alice will send to Bob *)
+    insert freshness(sci_A, 0, 0);    (* Initializes the freshness table with a zero value for the secure channel *)
+    insert key_counter(sci_A, 0, szk); (* Initializes the key counter table with the session key *)
+    (!Alice(msg, sci_A, szk, 1) | !Bob(sci_A, szk))  (* Spawns Alice and Bob processes for continuous message exchange *)

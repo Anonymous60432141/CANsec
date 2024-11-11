@@ -1,0 +1,100 @@
+set traceDisplay = long.
+
+(* Define key type and secure communication channel *)
+type key.
+free scA: channel.
+
+(* Encryption, Decryption, and HMAC functions *)
+(* Encrypts the msg *)
+fun enc(bitstring, key): bitstring.
+(* Decrypts the msg *)
+fun dec(bitstring, key): bitstring.
+(* Encryption and decryption of key during the key distribution process *)
+fun key_enc(key, key): bitstring.
+fun key_dec(bitstring, key): key.
+(* Calculate the ICV *)
+fun hmac(bitstring, nat, nat, key): bitstring.
+(* Used for deriving the key - KEK and ICK; session keys are generated randomly *)
+fun kdf(key, nat): key.
+
+(* Symmetric encryption and decryption equations *)
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+equation forall k1: key, k2: key; key_dec(key_enc(k1, k2), k2) = k1.
+
+(* Tables holding freshness and association keys for all peers *)
+table freshness(bitstring, nat, nat).
+table association_keys(bitstring, nat, key).
+
+(* Events marking message exchange between Alice and Bob *)
+event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
+event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
+
+
+(* Trusted key server *)
+let Trant(sci_A:bitstring, an:nat, fresh:nat, szk:key) = 
+    let ick_context = 20 in
+    let kek_context = 10 in
+    let kek = kdf(szk, kek_context) in
+    let ick = kdf(szk, ick_context) in 
+    new sak:key;
+    let msg = key_enc(sak, kek) in
+    let icv = hmac(msg, an, 1, ick) in
+    out(scA, (sci_A, an, fresh, msg, icv)).
+
+
+(* Process representing Alice sending a message to Bob *)
+let Alice(m: bitstring, sci_A: bitstring, szk: key, an: nat) =
+    get association_keys(=sci_A, =an, sak_alice) in(
+        let packet_number = 2 in
+        let msg = enc(m, sak_alice) in
+        let icv2 = hmac(msg, an, packet_number, sak_alice) in
+        event message_send_Alice(m, packet_number);
+        out(scA, (sci_A, an, packet_number, msg, icv2)))
+    else 0.
+
+
+(* Process representing Bob receiving and verifying a message from Alice *)
+let Bob(sci_A: bitstring, szk: key) =
+    in(scA, (sci: bitstring, an: nat, packet_number: nat, x: bitstring, icv: bitstring));
+    get association_keys(=sci, =an, ska_A) in
+        (get freshness(=sci, =an, fv) suchthat fv >= packet_number in 0 else(
+            if sci = sci_A && icv = hmac(x, an, packet_number, ska_A) then
+                (let received_msg = dec(x, ska_A) in
+                insert freshness(sci_A, an, packet_number);
+                event message_received_Bob(received_msg, packet_number))
+            else 0)
+        )
+        else
+            (   let ick_context = 20 in
+                let kek_context = 10 in
+                let ick = kdf(szk, ick_context) in
+            if sci = sci_A &&  icv = hmac(x, an, packet_number, ick) then
+            (
+                let kek = kdf(szk, kek_context) in
+                let sak = key_dec(x, kek) in
+                insert freshness(sci_A, an, packet_number);
+                insert association_keys(sci_A, an, sak)
+            )
+            else 0).
+
+(* Confidentiality query: Ensure messages cannot be intercepted *)
+query m: bitstring, packet_number: nat;
+    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
+
+(* Authentication query to prevent replay attacks *)
+query m: bitstring, packet_number: nat;
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
+
+(* Main process to simulate message exchange between Alice and Bob *)
+process
+    new szk: key;
+    new sci_A: bitstring;
+    new msg: bitstring;
+    let an = 0 in
+    insert freshness(sci_A, 0, 0); 
+    insert association_keys(sci_A, 0, szk);
+    (Trant(sci_A, an, 1, szk) | Bob(sci_A, szk))|
+    
+    phase 1;
+    (!Alice(msg, sci_A, szk, 1) | !Bob(sci_A, szk))

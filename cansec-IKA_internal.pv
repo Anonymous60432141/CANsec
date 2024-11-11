@@ -1,80 +1,77 @@
 (* Define key type and secure communication channel *)
-type key.
-free scA: channel.
+type key.                  (* Declares a type for encryption keys *)
+free scA: channel.         (* Defines a secure communication channel named scA *)
 
 (* Encryption, Decryption, and HMAC functions *)
-fun enc(bitstring, key): bitstring.
-fun dec(bitstring, key): bitstring.
-fun hmac(bitstring, nat, nat, key): bitstring.
-fun kdf(key, nat): key.
+fun enc(bitstring, key): bitstring.       (* Function for encryption using a symmetric key *)
+fun dec(bitstring, key): bitstring.       (* Function for decryption using a symmetric key *)
+fun hmac(bitstring, nat, nat, key): bitstring.   (* Function for generating HMAC for integrity checking *)
+fun kdf(key, nat): key.                   (* Key Derivation Function to derive new keys *)
 
 (* Symmetric encryption and decryption equations *)
-equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
-equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.    (* Encryption and decryption inverse equation *)
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.    (* Alternate form of the inverse equation *)
 
 (* Tables holding freshness and key counter values for all peers *)
-table freshness(bitstring, nat, nat).
-table key_counter(bitstring, nat, key).
-table revoke_keys(key, bitstring).
+table freshness(bitstring, nat, nat).    (* Tracks freshness of messages to prevent replay attacks *)
+table key_counter(bitstring, nat, key).  (* Stores key counters associated with peers *)
+table revoke_keys(key, bitstring).       (* Tracks revoked keys for secure channels *)
 
 (* Events marking message exchange between Alice and Bob *)
-event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
-event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
+event message_received_Bob(bitstring, nat).  (* Event indicating Bob successfully received a message *)
+event message_send_Alice(bitstring, nat).    (* Event indicating Alice sent a message *)
 
 (* Process representing Alice sending a message to Bob *)
 let Alice(m: bitstring, sci_A: bitstring, szk: key, kc: nat) =
-    let sak_alice = kdf(szk, kc) in
-    new random_msg:bitstring;
-    let packet_number = 1 in
-    let icv = hmac(random_msg, kc, packet_number, sak_alice) in
-    out(scA, (sci_A, kc, 1, enc(random_msg, sak_alice), icv));
-    let msg = enc(m, sak_alice) in
-    let icv2 = hmac(msg, kc, packet_number+1, sak_alice) in
-    event message_send_Alice(m, packet_number+1);
-    out(scA, (sci_A, kc, packet_number+1, msg, icv2)).
+    let sak_alice = kdf(szk, kc) in                      (* Derives a session key using the key counter *)
+    new random_msg: bitstring;                           (* Generates a new random message component *)
+    let packet_number = 1 in                             (* Sets the initial packet number *)
+    let icv = hmac(random_msg, kc, packet_number, sak_alice) in   (* Computes an integrity check value *)
+    out(scA, (sci_A, kc, 1, enc(random_msg, sak_alice), icv));    (* Sends initial message with encryption and integrity check *)
+    
+    let msg = enc(m, sak_alice) in                       (* Encrypts the actual message *)
+    let icv2 = hmac(msg, kc, packet_number+1, sak_alice) in (* Computes a second integrity check value *)
+    event message_send_Alice(m, packet_number+1);        (* Records the send event for Alice *)
+    out(scA, (sci_A, kc, packet_number+1, msg, icv2)).   (* Sends the encrypted message and integrity check *)
 
 (* Process representing Bob receiving and verifying a message from Alice *)
 let Bob(sci_A: bitstring, szk: key) =
-    in(scA, (sci: bitstring, kc: nat, packet_number: nat, x: bitstring, icv: bitstring));
+    in(scA, (sci: bitstring, kc: nat, packet_number: nat, x: bitstring, icv: bitstring));   (* Receives a message on the secure channel *)
     (* Fetch and validate key *)
-    get key_counter(=sci, =kc, ska_A) in
-        get revoke_keys(=ska_A, secure_channel) suchthat secure_channel = sci in 0 else
-            (get freshness(=sci, =kc, fv) suchthat fv >= packet_number in 0 else(
-                if sci = sci_A && icv = hmac(x, kc, packet_number, ska_A) then
-                    (let received_msg = dec(x, ska_A) in
-                    insert freshness(sci_A, kc, packet_number);
-                    event message_received_Bob(received_msg, packet_number))
+    get key_counter(=sci, =kc, ska_A) in                (* Retrieves the current key for Alice's secure channel *)
+        get revoke_keys(=ska_A, secure_channel) suchthat secure_channel = sci in 0 else   (* Checks if the key is revoked; aborts if it is *)
+            (get freshness(=sci, =kc, fv) suchthat fv >= packet_number in 0 else(    (* Checks freshness to avoid replayed messages *)
+                if sci = sci_A && icv = hmac(x, kc, packet_number, ska_A) then        (* Validates the received integrity check value *)
+                    (let received_msg = dec(x, ska_A) in                              (* Decrypts the message if valid *)
+                    insert freshness(sci_A, kc, packet_number);                       (* Updates freshness table *)
+                    event message_received_Bob(received_msg, packet_number))          (* Records the receive event for Bob *)
                 else 0)
             )
             else
-                (let n_key = kdf(szk, kc) in 
-                if sci = sci_A && packet_number=1 && icv = hmac(x, kc, packet_number, n_key) then
+                (let n_key = kdf(szk, kc) in                                         (* Derives a new key if a new session starts *)
+                if sci = sci_A && packet_number=1 && icv = hmac(x, kc, packet_number, n_key) then (* Verifies message integrity *)
                 (
-                    get revoke_keys(=n_key, sc) suchthat sc = sci in 0 else
-                    insert freshness(sci_A, kc, packet_number);
-                    insert key_counter(sci_A, kc, n_key)
+                    get revoke_keys(=n_key, sc) suchthat sc = sci in 0 else          (* Checks if the new key is revoked; aborts if it is *)
+                    insert freshness(sci_A, kc, packet_number);                      (* Updates freshness table for new session *)
+                    insert key_counter(sci_A, kc, n_key)                             (* Updates key counter with the new session key *)
                 )
                 else 0).
 
-(* Confidentiality query: Ensure messages cannot be intercepted *)
+(* Confidentiality query: Ensure messages cannot be intercepted by an attacker *)
 query m: bitstring, packet_number: nat;
-    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
+    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.  (* Asserts that attacker cannot obtain messages *)
 
-(* Authentication query *)
+(* Authentication query: Prevent replay attacks *)
 query m: bitstring, packet_number: nat;
-    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)). (* Ensures each message received by Bob was indeed sent by Alice *)
 
 (* Main process to simulate message exchange between Alice and Bob *)
 process
-    new szk: key;
-    out(scA, szk);
-    new sci_A: bitstring;
-    new msg: bitstring;
-    let kc = 1 in
-    insert freshness(sci_A, 0, 0);
-    insert key_counter(sci_A, 0, szk);
-    (!Alice(msg, sci_A, szk, kc) | !Bob(sci_A, szk))|
-
-    phase 1;
-    insert revoke_keys(kdf(szk, kc), sci_A);
-    (!Alice(msg, sci_A, szk, kc+1) | !Bob(sci_A, szk))
+    new szk: key;                                   (* Generates a new key for the secure communication *)
+    out(scA, szk);                                  (* Outputs the key to the channel mimic internal attacker*)
+    new sci_A: bitstring;                           (* Assigns a new unique identifier for Alice's secure channel *)
+    new msg: bitstring;                             (* Creates a new message for testing *)
+    let kc = 1 in                                   (* Initializes the key counter *)
+    insert freshness(sci_A, 0, 0);                  (* Initializes freshness table for Alice's secure channel *)
+    insert key_counter(sci_A, 0, szk);              (* Sets the initial key counter *)
+    (!Alice(msg, sci_A, szk, kc) | !Bob(sci_A, szk)) (* Runs Alice and Bob processes concurrently *)

@@ -1,0 +1,78 @@
+(* Define key type and secure communication channel *)
+type key.
+free scA: channel.
+
+(* Encryption, Decryption, and HMAC functions *)
+fun enc(bitstring, key): bitstring.
+fun dec(bitstring, key): bitstring.
+fun hmac(bitstring, nat, nat, key): bitstring.
+fun kdf(key, nat): key.
+
+(* Symmetric encryption and decryption equations *)
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+
+(* Tables holding freshness and key counter values for all peers *)
+table freshness(bitstring, nat, nat).
+table key_counter(bitstring, nat, key).
+table revoke_keys(key, bitstring).
+
+(* Events marking message exchange between Alice and Bob *)
+event message_received_Bob(bitstring, nat).     (* Event for when Bob successfully receives a message. *)
+event message_send_Alice(bitstring, nat).       (* Event for when Alice sends a message. *)
+
+(* Process representing Alice sending a message to Bob *)
+let Alice(m: bitstring, sci_A: bitstring, szk: key, kc: nat) =
+    let sak_alice = kdf(szk, kc) in
+    new random_msg:bitstring;
+    let packet_number = 1 in
+    let icv = hmac(random_msg, kc, packet_number, sak_alice) in
+    out(scA, (sci_A, kc, 1, enc(random_msg, sak_alice), icv));
+    let msg = enc(m, sak_alice) in
+    let icv2 = hmac(msg, kc, packet_number+1, sak_alice) in
+    event message_send_Alice(m, packet_number+1);
+    out(scA, (sci_A, kc, packet_number+1, msg, icv2)).
+
+(* Process representing Bob receiving and verifying a message from Alice *)
+let Bob(sci_A: bitstring, szk: key) =
+    in(scA, (sci: bitstring, kc: nat, packet_number: nat, x: bitstring, icv: bitstring));
+    (* Fetch and validate key *)
+    get key_counter(=sci, =kc, ska_A) in
+        get revoke_keys(=ska_A, secure_channel) suchthat secure_channel = sci in 0 else
+            (get freshness(=sci, =kc, fv) suchthat fv >= packet_number in 0 else(
+                if sci = sci_A && icv = hmac(x, kc, packet_number, ska_A) then
+                    (let received_msg = dec(x, ska_A) in
+                    insert freshness(sci_A, kc, packet_number);
+                    event message_received_Bob(received_msg, packet_number))
+                else 0)
+            )
+            else
+                (let n_key = kdf(szk, kc) in 
+                if sci = sci_A && icv = hmac(x, kc, packet_number, n_key) then
+                (
+                    get revoke_keys(=n_key, sc) suchthat sc = sci in 0 else
+                    insert freshness(sci_A, kc, packet_number);
+                    insert key_counter(sci_A, kc, n_key)
+                )
+                else 0).
+
+(* Confidentiality query: Ensure messages cannot be intercepted *)
+query m: bitstring, packet_number: nat;
+    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
+
+(* Authentication query *)
+query m: bitstring, packet_number: nat;
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
+
+(* Main process to simulate message exchange between Alice and Bob *)
+process
+    new szk: key;
+    (* Adversary has the secure Zone key *)
+    out(scA, szk);
+    new sci_A: bitstring;
+    new msg: bitstring;
+    let kc = 1 in
+    insert freshness(sci_A, 0, 0);
+    insert key_counter(sci_A, 0, szk);
+    (!Alice(msg, sci_A, szk, kc) | !Bob(sci_A, szk))
+    (* For complete revocation we want to have new SZK and blacklist the compromised node *)
