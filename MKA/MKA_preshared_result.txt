@@ -1,0 +1,2894 @@
+Linear part: No equation.
+Convergent part:
+dec(enc(m,k),k) = m
+enc(dec(m,k),k) = m
+key_dec(key_enc(k1,k2),k2) = k1
+Completing equations...
+Completed equations:
+key_dec(key_enc(k1,k2),k2) = k1
+enc(dec(m,k),k) = m
+dec(enc(m,k),k) = m
+Process 0 (that is, the initial process):
+{1}new szk: key;
+{2}out(scA, szk);
+{3}new sci_A: bitstring;
+{4}new msg: bitstring;
+{5}let an: nat = 0 in
+{6}insert freshness(sci_A,0,0);
+{7}insert association_keys(sci_A,0,szk);
+(
+    {8}let sci_A_1: bitstring = sci_A in
+    {9}let fresh: nat = 1 in
+    {10}let szk_1: key = szk in
+    {11}let kek: key = kdf(szk_1,10) in
+    {12}let ick: key = kdf(szk_1,20) in
+    {13}new sak: key;
+    {14}let msg_1: bitstring = key_enc(sak,kek) in
+    {15}let icv: bitstring = hmac(msg_1,an,1,ick) in
+    {16}out(scA, (sci_A_1,an,fresh,msg_1,icv))
+) | (
+    {17}let sci_A_2: bitstring = sci_A in
+    {18}let szk_2: key = szk in
+    {19}in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+    {31}get association_keys(=sci,=an_1,ska_A: key) in
+    (
+        {24}get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+            0
+        else
+            {20}if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+            {21}let received_msg: bitstring = dec(x,ska_A) in
+            {22}insert freshness(sci_A_2,an_1,packet_number);
+            {23}event message_received_Bob(received_msg,packet_number)
+    )
+    else
+        {25}let n_key: key = kdf(szk_2,20) in
+        {26}if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+        {27}let kek_1: key = kdf(szk_2,10) in
+        {28}let sak_1: key = key_dec(x,kek_1) in
+        {29}insert freshness(sci_A_2,an_1,packet_number);
+        {30}insert association_keys(sci_A_2,an_1,sak_1)
+) | (
+    {32}phase 1;
+    (
+        {33}let m: bitstring = msg in
+        {34}let sci_A_3: bitstring = sci_A in
+        {35}let szk_3: key = szk in
+        {36}let an_2: nat = 1 in
+        {42}get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        {37}let packet_number_1: nat = 2 in
+        {38}let msg_2: bitstring = enc(m,sak_alice) in
+        {39}let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        {40}event message_send_Alice(m,packet_number_1);
+        {41}out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        {43}let sci_A_4: bitstring = sci_A in
+        {44}let szk_4: key = szk in
+        {45}in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        {57}get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            {50}get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                {46}if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                {47}let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                {48}insert freshness(sci_A_4,an_3,packet_number_2);
+                {49}event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            {51}let n_key_1: key = kdf(szk_4,20) in
+            {52}if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            {53}let kek_2: key = kdf(szk_4,10) in
+            {54}let sak_2: key = key_dec(x_1,kek_2) in
+            {55}insert freshness(sci_A_4,an_3,packet_number_2);
+            {56}insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        {58}phase 2;
+        {59}new sak_3: key;
+        {60}insert association_keys(sci_A,an + 1,sak_3);
+        (
+            {61}let m_1: bitstring = msg in
+            {62}let sci_A_5: bitstring = sci_A in
+            {63}let szk_5: key = szk in
+            {64}let an_4: nat = an + 1 in
+            {70}get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            {65}let packet_number_3: nat = 2 in
+            {66}let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            {67}let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            {68}event message_send_Alice(m_1,packet_number_3);
+            {69}out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            {71}let sci_A_6: bitstring = sci_A in
+            {72}let szk_6: key = szk in
+            {73}in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            {85}get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                {78}get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    {74}if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    {75}let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    {76}insert freshness(sci_A_6,an_5,packet_number_4);
+                    {77}event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                {79}let n_key_2: key = kdf(szk_6,20) in
+                {80}if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                {81}let kek_3: key = kdf(szk_6,10) in
+                {82}let sak_4: key = key_dec(x_2,kek_3) in
+                {83}insert freshness(sci_A_6,an_5,packet_number_4);
+                {84}insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+{1}new szk: key;
+{2}out(scA, szk);
+{3}new sci_A: bitstring;
+{4}new msg: bitstring;
+{6}insert freshness(sci_A,0,0);
+{7}insert association_keys(sci_A,0,szk);
+{5}let an: nat = 0 in
+(
+    {13}new sak: key;
+    {10}let szk_1: key = szk in
+    {11}let kek: key = kdf(szk_1,10) in
+    {14}let msg_1: bitstring = key_enc(sak,kek) in
+    {12}let ick: key = kdf(szk_1,20) in
+    {15}let icv: bitstring = hmac(msg_1,an,1,ick) in
+    {9}let fresh: nat = 1 in
+    {8}let sci_A_1: bitstring = sci_A in
+    {16}out(scA, (sci_A_1,an,fresh,msg_1,icv))
+) | (
+    {19}in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+    {17}let sci_A_2: bitstring = sci_A in
+    {31}get association_keys(=sci,=an_1,ska_A: key) in
+    (
+        {24}get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+            0
+        else
+            {20}if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+            {22}insert freshness(sci_A_2,an_1,packet_number);
+            {21}let received_msg: bitstring = dec(x,ska_A) in
+            {23}event message_received_Bob(received_msg,packet_number)
+    )
+    else
+        {18}let szk_2: key = szk in
+        {25}let n_key: key = kdf(szk_2,20) in
+        {26}if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+        {29}insert freshness(sci_A_2,an_1,packet_number);
+        {27}let kek_1: key = kdf(szk_2,10) in
+        {28}let sak_1: key = key_dec(x,kek_1) in
+        {30}insert association_keys(sci_A_2,an_1,sak_1)
+) | (
+    {32}phase 1;
+    (
+        {36}let an_2: nat = 1 in
+        {34}let sci_A_3: bitstring = sci_A in
+        {42}get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        {37}let packet_number_1: nat = 2 in
+        {33}let m: bitstring = msg in
+        {40}event message_send_Alice(m,packet_number_1);
+        {38}let msg_2: bitstring = enc(m,sak_alice) in
+        {39}let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        {41}out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        {45}in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        {43}let sci_A_4: bitstring = sci_A in
+        {57}get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            {50}get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                {46}if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                {48}insert freshness(sci_A_4,an_3,packet_number_2);
+                {47}let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                {49}event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            {44}let szk_4: key = szk in
+            {51}let n_key_1: key = kdf(szk_4,20) in
+            {52}if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            {55}insert freshness(sci_A_4,an_3,packet_number_2);
+            {53}let kek_2: key = kdf(szk_4,10) in
+            {54}let sak_2: key = key_dec(x_1,kek_2) in
+            {56}insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        {58}phase 2;
+        {59}new sak_3: key;
+        {60}insert association_keys(sci_A,an + 1,sak_3);
+        (
+            {64}let an_4: nat = an + 1 in
+            {62}let sci_A_5: bitstring = sci_A in
+            {70}get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            {65}let packet_number_3: nat = 2 in
+            {61}let m_1: bitstring = msg in
+            {68}event message_send_Alice(m_1,packet_number_3);
+            {66}let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            {67}let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            {69}out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            {73}in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            {71}let sci_A_6: bitstring = sci_A in
+            {85}get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                {78}get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    {74}if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    {76}insert freshness(sci_A_6,an_5,packet_number_4);
+                    {75}let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    {77}event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                {72}let szk_6: key = szk in
+                {79}let n_key_2: key = kdf(szk_6,20) in
+                {80}if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                {83}insert freshness(sci_A_6,an_5,packet_number_4);
+                {81}let kek_3: key = kdf(szk_6,10) in
+                {82}let sak_4: key = key_dec(x_2,kek_3) in
+                {84}insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+)
+
+-- Query not (event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 179 rules (58 with conclusion selected). Queue: 65 rules.
+400 rules inserted. Base: 227 rules (67 with conclusion selected). Queue: 96 rules.
+600 rules inserted. Base: 270 rules (94 with conclusion selected). Queue: 119 rules.
+800 rules inserted. Base: 328 rules (103 with conclusion selected). Queue: 152 rules.
+1000 rules inserted. Base: 353 rules (113 with conclusion selected). Queue: 151 rules.
+1200 rules inserted. Base: 365 rules (116 with conclusion selected). Queue: 134 rules.
+1400 rules inserted. Base: 347 rules (122 with conclusion selected). Queue: 63 rules.
+Starting query not (event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2))
+goal reachable: attacker(m_2) && attacker(packet_number_5) && attacker_p2(m_2) -> event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)
+
+Derivation:
+
+1. We assume as hypothesis that
+attacker_p2(m_2).
+
+2. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+3. We assume as hypothesis that
+attacker(packet_number_5).
+
+4. Using the function 0 the attacker may obtain 0.
+attacker(0).
+
+5. We assume as hypothesis that
+attacker(m_2).
+
+6. By 5, the attacker may know m_2.
+By 2, the attacker may know szk[].
+Using the function enc the attacker may obtain enc(m_2,szk[]).
+attacker(enc(m_2,szk[])).
+
+7. By 6, the attacker may know enc(m_2,szk[]).
+By 4, the attacker may know 0.
+By 3, the attacker may know packet_number_5.
+By 2, the attacker may know szk[].
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_5,szk[]).
+attacker(hmac(enc(m_2,szk[]),0,packet_number_5,szk[])).
+
+8. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+9. By 8, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+10. By 9, the attacker may know sci_A[].
+By 4, the attacker may know 0.
+By 3, the attacker may know packet_number_5.
+By 6, the attacker may know enc(m_2,szk[]).
+By 7, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_5,szk[]).
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])).
+attacker((sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[]))).
+
+11. The entry association_keys(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(association_keys(sci_A[],0,szk[])).
+
+12. The message (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) that the attacker may have by 10 may be received at input {19}.
+The entry association_keys(sci_A[],0,szk[]) that may be in a table by 11 may be read at get {31}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {23}.
+event(message_received_Bob(m_2,packet_number_5)).
+
+13. By 12, event(message_received_Bob(m_2,packet_number_5)).
+By 1, attacker_p2(m_2).
+The goals are reached, combined in the following fact:
+event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+scA
+a
+a_1
+--------------------------------------------------------------
+New processes:
+    new szk: key;
+    out(scA, szk);
+    new sci_A: bitstring;
+    new msg: bitstring;
+    insert freshness(sci_A,0,0);
+    insert association_keys(sci_A,0,szk);
+    let an: nat = 0 in
+    (
+        new sak: key;
+        let szk_1: key = szk in
+        let kek: key = kdf(szk_1,10) in
+        let msg_1: bitstring = key_enc(sak,kek) in
+        let ick: key = kdf(szk_1,20) in
+        let icv: bitstring = hmac(msg_1,an,1,ick) in
+        let fresh: nat = 1 in
+        let sci_A_1: bitstring = sci_A in
+        out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    ) | (
+        in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+        let sci_A_2: bitstring = sci_A in
+        get association_keys(=sci,=an_1,ska_A: key) in
+        (
+            get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+                0
+            else
+                if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+                insert freshness(sci_A_2,an_1,packet_number);
+                let received_msg: bitstring = dec(x,ska_A) in
+                event message_received_Bob(received_msg,packet_number)
+        )
+        else
+            let szk_2: key = szk in
+            let n_key: key = kdf(szk_2,20) in
+            if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+            insert freshness(sci_A_2,an_1,packet_number);
+            let kek_1: key = kdf(szk_2,10) in
+            let sak_1: key = key_dec(x,kek_1) in
+            insert association_keys(sci_A_2,an_1,sak_1)
+    ) | (
+        phase 1;
+        (
+            let an_2: nat = 1 in
+            let sci_A_3: bitstring = sci_A in
+            get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+            let packet_number_1: nat = 2 in
+            let m: bitstring = msg in
+            event message_send_Alice(m,packet_number_1);
+            let msg_2: bitstring = enc(m,sak_alice) in
+            let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+            out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+        ) | (
+            in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+            let sci_A_4: bitstring = sci_A in
+            get association_keys(=sci_1,=an_3,ska_A_1: key) in
+            (
+                get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                    0
+                else
+                    if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                    insert freshness(sci_A_4,an_3,packet_number_2);
+                    let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                    event message_received_Bob(received_msg_1,packet_number_2)
+            )
+            else
+                let szk_4: key = szk in
+                let n_key_1: key = kdf(szk_4,20) in
+                if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let kek_2: key = kdf(szk_4,10) in
+                let sak_2: key = key_dec(x_1,kek_2) in
+                insert association_keys(sci_A_4,an_3,sak_2)
+        ) | (
+            phase 2;
+            new sak_3: key;
+            insert association_keys(sci_A,an + 1,sak_3);
+            (
+                let an_4: nat = an + 1 in
+                let sci_A_5: bitstring = sci_A in
+                get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+                let packet_number_3: nat = 2 in
+                let m_1: bitstring = msg in
+                event message_send_Alice(m_1,packet_number_3);
+                let msg_3: bitstring = enc(m_1,sak_alice_1) in
+                let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+                out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+            ) | (
+                in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+                let sci_A_6: bitstring = sci_A in
+                get association_keys(=sci_2,=an_5,ska_A_2: key) in
+                (
+                    get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                        0
+                    else
+                        if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                        insert freshness(sci_A_6,an_5,packet_number_4);
+                        let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                        event message_received_Bob(received_msg_2,packet_number_4)
+                )
+                else
+                    let szk_6: key = szk in
+                    let n_key_2: key = kdf(szk_6,20) in
+                    if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let kek_3: key = kdf(szk_6,10) in
+                    let sak_4: key = key_dec(x_2,kek_3) in
+                    insert association_keys(sci_A_6,an_5,sak_4)
+            )
+        )
+    )
+
+--------------------------------------------------------------
+1st process: new szk: key creating szk_7
+
+1st process: out(scA, ~M) with ~M = szk_7 done
+
+Additional knowledge of the attacker:
+hmac(enc(a_1,~M),0,a,~M) = hmac(enc(a_1,szk_7),0,a,szk_7)
+enc(a_1,~M) = enc(a_1,szk_7)
+~M = szk_7
+--------------------------------------------------------------
+1st process: new sci_A: bitstring creating sci_A_7
+
+1st process: new msg: bitstring creating msg_4
+
+1st process: insert freshness(sci_A_7,0,0) done
+
+1st process: insert association_keys(sci_A_7,0,szk_7) done
+
+1st process: let an: nat = 0 succeeds
+
+1st process: Reduction |
+
+1st process: Reduction |
+
+2nd process: Beginning of process Bob
+
+1st process: Beginning of process Trant
+
+1st process: new sak: key creating sak_5
+
+1st process: let szk_1: key = szk_7 succeeds
+
+1st process: let kek: key = kdf(szk_7,10) succeeds
+
+1st process: let msg_1: bitstring = key_enc(sak_5,kdf(szk_7,10)) succeeds
+
+1st process: let ick: key = kdf(szk_7,20) succeeds
+
+1st process: let icv: bitstring = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20)) succeeds
+
+1st process: let fresh: nat = 1 succeeds
+
+1st process: let sci_A_1: bitstring = sci_A_7 succeeds
+
+1st process: out(scA, (~M_1,0,1,~M_2,~M_3)) with ~M_1 = sci_A_7, ~M_2 = key_enc(sak_5,kdf(szk_7,10)), ~M_3 = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20)) done
+
+Additional knowledge of the attacker:
+~M_3 = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20))
+~M_2 = key_enc(sak_5,kdf(szk_7,10))
+~M_1 = sci_A_7
+--------------------------------------------------------------
+1st process: Reduction 0
+
+New processes:
+(
+    in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+    let sci_A_2: bitstring = sci_A_7 in
+    get association_keys(=sci,=an_1,ska_A: key) in
+    (
+        get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+            0
+        else
+            if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+            insert freshness(sci_A_2,an_1,packet_number);
+            let received_msg: bitstring = dec(x,ska_A) in
+            event message_received_Bob(received_msg,packet_number)
+    )
+    else
+        let szk_2: key = szk_7 in
+        let n_key: key = kdf(szk_2,20) in
+        if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+        insert freshness(sci_A_2,an_1,packet_number);
+        let kek_1: key = kdf(szk_2,10) in
+        let sak_1: key = key_dec(x,kek_1) in
+        insert association_keys(sci_A_2,an_1,sak_1)
+) | (
+    phase 1;
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+)
+
+--------------------------------------------------------------
+1st process: in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring)) done with message (~M_1,0,a,enc(a_1,~M),hmac(enc(a_1,~M),0,a,~M)) = (sci_A_7,0,a,enc(a_1,szk_7),hmac(enc(a_1,szk_7),0,a,szk_7))
+
+1st process: let sci_A_2: bitstring = sci_A_7 succeeds
+
+1st process: get association_keys(=sci_A_7,=0,ska_A: key) done with entry association_keys(sci_A_7,0,szk_7)
+
+1st process: get freshness(=sci_A_7,=0,fv: nat) suchthat (fv ≥ a): else branch taken
+
+1st process: if ((sci_A_7 = sci_A_7) && (hmac(enc(a_1,szk_7),0,a,szk_7) = hmac(enc(a_1,szk_7),0,a,szk_7))) succeeds
+
+1st process: insert freshness(sci_A_7,0,a) done
+
+1st process: let received_msg: bitstring = dec(enc(a_1,szk_7),szk_7) succeeds
+
+1st process: event message_received_Bob(dec(enc(a_1,szk_7),szk_7),a) executed; it is a goal
+
+New processes:
+(
+    0
+) | (
+    phase 1;
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+)
+
+--------------------------------------------------------------
+The event message_received_Bob(a_1,a) is executed at {23}.
+The attacker has the message a_1 in phase 2.
+A trace has been found, assuming the following hypothesis:
+attacker_p2(a_1[])
+goal reachable: attacker_p1(m_2) && attacker_p1(packet_number_5) && attacker_p2(m_2) -> event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)
+
+Derivation:
+
+1. We assume as hypothesis that
+attacker_p2(m_2).
+
+2. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+3. By 2, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+4. We assume as hypothesis that
+attacker_p1(packet_number_5).
+
+5. Using the function 0 the attacker may obtain 0 in phase 1.
+attacker_p1(0).
+
+6. We assume as hypothesis that
+attacker_p1(m_2).
+
+7. By 6, the attacker may know m_2 in phase 1.
+By 3, the attacker may know szk[] in phase 1.
+Using the function enc the attacker may obtain enc(m_2,szk[]) in phase 1.
+attacker_p1(enc(m_2,szk[])).
+
+8. By 7, the attacker may know enc(m_2,szk[]) in phase 1.
+By 5, the attacker may know 0 in phase 1.
+By 4, the attacker may know packet_number_5 in phase 1.
+By 3, the attacker may know szk[] in phase 1.
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_5,szk[]) in phase 1.
+attacker_p1(hmac(enc(m_2,szk[]),0,packet_number_5,szk[])).
+
+9. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+10. By 9, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+11. By 10, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+12. By 11, the attacker may know sci_A[] in phase 1.
+By 5, the attacker may know 0 in phase 1.
+By 4, the attacker may know packet_number_5 in phase 1.
+By 7, the attacker may know enc(m_2,szk[]) in phase 1.
+By 8, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_5,szk[]) in phase 1.
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) in phase 1.
+attacker_p1((sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[]))).
+
+13. The entry association_keys(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(association_keys(sci_A[],0,szk[])).
+
+14. By 13, a table may contain the entry association_keys(sci_A[],0,szk[]).
+So a table may contain the entry association_keys(sci_A[],0,szk[]) in phase 1.
+table_p1(association_keys(sci_A[],0,szk[])).
+
+15. The message (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) that the attacker may have in phase 1 by 12 may be received at input {45}.
+The entry association_keys(sci_A[],0,szk[]) that may be in a table in phase 1 by 14 may be read at get {57}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {49}.
+event(message_received_Bob(m_2,packet_number_5)).
+
+16. By 15, event(message_received_Bob(m_2,packet_number_5)).
+By 1, attacker_p2(m_2).
+The goals are reached, combined in the following fact:
+event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2).
+
+
+Could not find a trace corresponding to this derivation.
+goal reachable: attacker(m_2) && attacker_p1(packet_number_5) && attacker_p2(m_2) -> event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)
+
+Derivation:
+
+1. We assume as hypothesis that
+attacker_p2(m_2).
+
+2. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+3. By 2, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+4. We assume as hypothesis that
+attacker_p1(packet_number_5).
+
+5. Using the function 0 the attacker may obtain 0 in phase 1.
+attacker_p1(0).
+
+6. We assume as hypothesis that
+attacker(m_2).
+
+7. By 6, the attacker may know m_2.
+By 2, the attacker may know szk[].
+Using the function enc the attacker may obtain enc(m_2,szk[]).
+attacker(enc(m_2,szk[])).
+
+8. By 7, the attacker may know enc(m_2,szk[]).
+So the attacker may know enc(m_2,szk[]) in phase 1.
+attacker_p1(enc(m_2,szk[])).
+
+9. By 8, the attacker may know enc(m_2,szk[]) in phase 1.
+By 5, the attacker may know 0 in phase 1.
+By 4, the attacker may know packet_number_5 in phase 1.
+By 3, the attacker may know szk[] in phase 1.
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_5,szk[]) in phase 1.
+attacker_p1(hmac(enc(m_2,szk[]),0,packet_number_5,szk[])).
+
+10. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+11. By 10, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+12. By 11, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+13. By 12, the attacker may know sci_A[] in phase 1.
+By 5, the attacker may know 0 in phase 1.
+By 4, the attacker may know packet_number_5 in phase 1.
+By 8, the attacker may know enc(m_2,szk[]) in phase 1.
+By 9, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_5,szk[]) in phase 1.
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) in phase 1.
+attacker_p1((sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[]))).
+
+14. The entry association_keys(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(association_keys(sci_A[],0,szk[])).
+
+15. By 14, a table may contain the entry association_keys(sci_A[],0,szk[]).
+So a table may contain the entry association_keys(sci_A[],0,szk[]) in phase 1.
+table_p1(association_keys(sci_A[],0,szk[])).
+
+16. The message (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) that the attacker may have in phase 1 by 13 may be received at input {45}.
+The entry association_keys(sci_A[],0,szk[]) that may be in a table in phase 1 by 15 may be read at get {57}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {49}.
+event(message_received_Bob(m_2,packet_number_5)).
+
+17. By 16, event(message_received_Bob(m_2,packet_number_5)).
+By 1, attacker_p2(m_2).
+The goals are reached, combined in the following fact:
+event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+scA
+a
+--------------------------------------------------------------
+New processes:
+    new szk: key;
+    out(scA, szk);
+    new sci_A: bitstring;
+    new msg: bitstring;
+    insert freshness(sci_A,0,0);
+    insert association_keys(sci_A,0,szk);
+    let an: nat = 0 in
+    (
+        new sak: key;
+        let szk_1: key = szk in
+        let kek: key = kdf(szk_1,10) in
+        let msg_1: bitstring = key_enc(sak,kek) in
+        let ick: key = kdf(szk_1,20) in
+        let icv: bitstring = hmac(msg_1,an,1,ick) in
+        let fresh: nat = 1 in
+        let sci_A_1: bitstring = sci_A in
+        out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    ) | (
+        in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+        let sci_A_2: bitstring = sci_A in
+        get association_keys(=sci,=an_1,ska_A: key) in
+        (
+            get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+                0
+            else
+                if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+                insert freshness(sci_A_2,an_1,packet_number);
+                let received_msg: bitstring = dec(x,ska_A) in
+                event message_received_Bob(received_msg,packet_number)
+        )
+        else
+            let szk_2: key = szk in
+            let n_key: key = kdf(szk_2,20) in
+            if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+            insert freshness(sci_A_2,an_1,packet_number);
+            let kek_1: key = kdf(szk_2,10) in
+            let sak_1: key = key_dec(x,kek_1) in
+            insert association_keys(sci_A_2,an_1,sak_1)
+    ) | (
+        phase 1;
+        (
+            let an_2: nat = 1 in
+            let sci_A_3: bitstring = sci_A in
+            get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+            let packet_number_1: nat = 2 in
+            let m: bitstring = msg in
+            event message_send_Alice(m,packet_number_1);
+            let msg_2: bitstring = enc(m,sak_alice) in
+            let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+            out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+        ) | (
+            in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+            let sci_A_4: bitstring = sci_A in
+            get association_keys(=sci_1,=an_3,ska_A_1: key) in
+            (
+                get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                    0
+                else
+                    if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                    insert freshness(sci_A_4,an_3,packet_number_2);
+                    let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                    event message_received_Bob(received_msg_1,packet_number_2)
+            )
+            else
+                let szk_4: key = szk in
+                let n_key_1: key = kdf(szk_4,20) in
+                if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let kek_2: key = kdf(szk_4,10) in
+                let sak_2: key = key_dec(x_1,kek_2) in
+                insert association_keys(sci_A_4,an_3,sak_2)
+        ) | (
+            phase 2;
+            new sak_3: key;
+            insert association_keys(sci_A,an + 1,sak_3);
+            (
+                let an_4: nat = an + 1 in
+                let sci_A_5: bitstring = sci_A in
+                get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+                let packet_number_3: nat = 2 in
+                let m_1: bitstring = msg in
+                event message_send_Alice(m_1,packet_number_3);
+                let msg_3: bitstring = enc(m_1,sak_alice_1) in
+                let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+                out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+            ) | (
+                in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+                let sci_A_6: bitstring = sci_A in
+                get association_keys(=sci_2,=an_5,ska_A_2: key) in
+                (
+                    get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                        0
+                    else
+                        if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                        insert freshness(sci_A_6,an_5,packet_number_4);
+                        let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                        event message_received_Bob(received_msg_2,packet_number_4)
+                )
+                else
+                    let szk_6: key = szk in
+                    let n_key_2: key = kdf(szk_6,20) in
+                    if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let kek_3: key = kdf(szk_6,10) in
+                    let sak_4: key = key_dec(x_2,kek_3) in
+                    insert association_keys(sci_A_6,an_5,sak_4)
+            )
+        )
+    )
+
+--------------------------------------------------------------
+1st process: new szk: key creating szk_7
+
+1st process: out(scA, ~M) with ~M = szk_7 done
+
+Additional knowledge of the attacker:
+enc(a,~M) = enc(a,szk_7)
+~M = szk_7
+--------------------------------------------------------------
+1st process: new sci_A: bitstring creating sci_A_7
+
+1st process: new msg: bitstring creating msg_4
+
+1st process: insert freshness(sci_A_7,0,0) done
+
+1st process: insert association_keys(sci_A_7,0,szk_7) done
+
+1st process: let an: nat = 0 succeeds
+
+1st process: Reduction |
+
+1st process: Reduction |
+
+2nd process: Beginning of process Bob
+
+1st process: Beginning of process Trant
+
+1st process: new sak: key creating sak_5
+
+1st process: let szk_1: key = szk_7 succeeds
+
+1st process: let kek: key = kdf(szk_7,10) succeeds
+
+1st process: let msg_1: bitstring = key_enc(sak_5,kdf(szk_7,10)) succeeds
+
+1st process: let ick: key = kdf(szk_7,20) succeeds
+
+1st process: let icv: bitstring = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20)) succeeds
+
+1st process: let fresh: nat = 1 succeeds
+
+1st process: let sci_A_1: bitstring = sci_A_7 succeeds
+
+1st process: out(scA, (~M_1,0,1,~M_2,~M_3)) with ~M_1 = sci_A_7, ~M_2 = key_enc(sak_5,kdf(szk_7,10)), ~M_3 = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20)) done
+
+Additional knowledge of the attacker:
+~M_3 = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20))
+~M_2 = key_enc(sak_5,kdf(szk_7,10))
+~M_1 = sci_A_7
+--------------------------------------------------------------
+1st process: Reduction 0
+
+New processes:
+(
+    in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+    let sci_A_2: bitstring = sci_A_7 in
+    get association_keys(=sci,=an_1,ska_A: key) in
+    (
+        get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+            0
+        else
+            if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+            insert freshness(sci_A_2,an_1,packet_number);
+            let received_msg: bitstring = dec(x,ska_A) in
+            event message_received_Bob(received_msg,packet_number)
+    )
+    else
+        let szk_2: key = szk_7 in
+        let n_key: key = kdf(szk_2,20) in
+        if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+        insert freshness(sci_A_2,an_1,packet_number);
+        let kek_1: key = kdf(szk_2,10) in
+        let sak_1: key = key_dec(x,kek_1) in
+        insert association_keys(sci_A_2,an_1,sak_1)
+) | (
+    phase 1;
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+)
+
+--------------------------------------------------------------
+Switching to phase 1
+
+Additional knowledge of the attacker:
+hmac(enc(a,~M),0,a_1,~M) = hmac(enc(a,szk_7),0,a_1,szk_7)
+a_1
+--------------------------------------------------------------
+New processes:
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+1st process: Reduction |
+
+2nd process: Beginning of process Bob
+
+1st process: Beginning of process Alice
+
+1st process: let an_2: nat = 1 succeeds
+
+1st process: let sci_A_3: bitstring = sci_A_7 succeeds
+
+New processes:
+(
+    get association_keys(=sci_A_7,=1,sak_alice: key) in
+    let packet_number_1: nat = 2 in
+    let m: bitstring = msg_4 in
+    event message_send_Alice(m,packet_number_1);
+    let msg_2: bitstring = enc(m,sak_alice) in
+    let icv2: bitstring = hmac(msg_2,1,packet_number_1,sak_alice) in
+    out(scA, (sci_A_7,1,packet_number_1,msg_2,icv2))
+) | (
+    in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+    let sci_A_4: bitstring = sci_A_7 in
+    get association_keys(=sci_1,=an_3,ska_A_1: key) in
+    (
+        get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+            0
+        else
+            if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+            event message_received_Bob(received_msg_1,packet_number_2)
+    )
+    else
+        let szk_4: key = szk_7 in
+        let n_key_1: key = kdf(szk_4,20) in
+        if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+        insert freshness(sci_A_4,an_3,packet_number_2);
+        let kek_2: key = kdf(szk_4,10) in
+        let sak_2: key = key_dec(x_1,kek_2) in
+        insert association_keys(sci_A_4,an_3,sak_2)
+) | (
+    phase 2;
+    new sak_3: key;
+    insert association_keys(sci_A_7,1,sak_3);
+    (
+        let an_4: nat = 1 in
+        let sci_A_5: bitstring = sci_A_7 in
+        get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+        let packet_number_3: nat = 2 in
+        let m_1: bitstring = msg_4 in
+        event message_send_Alice(m_1,packet_number_3);
+        let msg_3: bitstring = enc(m_1,sak_alice_1) in
+        let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+        out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+    ) | (
+        in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+        let sci_A_6: bitstring = sci_A_7 in
+        get association_keys(=sci_2,=an_5,ska_A_2: key) in
+        (
+            get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                0
+            else
+                if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                event message_received_Bob(received_msg_2,packet_number_4)
+        )
+        else
+            let szk_6: key = szk_7 in
+            let n_key_2: key = kdf(szk_6,20) in
+            if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+            insert freshness(sci_A_6,an_5,packet_number_4);
+            let kek_3: key = kdf(szk_6,10) in
+            let sak_4: key = key_dec(x_2,kek_3) in
+            insert association_keys(sci_A_6,an_5,sak_4)
+    )
+)
+
+--------------------------------------------------------------
+2nd process: in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring)) done with message (~M_1,0,a_1,enc(a,~M),hmac(enc(a,~M),0,a_1,~M)) = (sci_A_7,0,a_1,enc(a,szk_7),hmac(enc(a,szk_7),0,a_1,szk_7))
+
+2nd process: let sci_A_4: bitstring = sci_A_7 succeeds
+
+2nd process: get association_keys(=sci_A_7,=0,ska_A_1: key) done with entry association_keys(sci_A_7,0,szk_7)
+
+2nd process: get freshness(=sci_A_7,=0,fv_1: nat) suchthat (fv_1 ≥ a_1): else branch taken
+
+2nd process: if ((sci_A_7 = sci_A_7) && (hmac(enc(a,szk_7),0,a_1,szk_7) = hmac(enc(a,szk_7),0,a_1,szk_7))) succeeds
+
+2nd process: insert freshness(sci_A_7,0,a_1) done
+
+2nd process: let received_msg_1: bitstring = dec(enc(a,szk_7),szk_7) succeeds
+
+2nd process: event message_received_Bob(dec(enc(a,szk_7),szk_7),a_1) executed; it is a goal
+
+New processes:
+(
+    get association_keys(=sci_A_7,=1,sak_alice: key) in
+    let packet_number_1: nat = 2 in
+    let m: bitstring = msg_4 in
+    event message_send_Alice(m,packet_number_1);
+    let msg_2: bitstring = enc(m,sak_alice) in
+    let icv2: bitstring = hmac(msg_2,1,packet_number_1,sak_alice) in
+    out(scA, (sci_A_7,1,packet_number_1,msg_2,icv2))
+) | (
+    0
+) | (
+    phase 2;
+    new sak_3: key;
+    insert association_keys(sci_A_7,1,sak_3);
+    (
+        let an_4: nat = 1 in
+        let sci_A_5: bitstring = sci_A_7 in
+        get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+        let packet_number_3: nat = 2 in
+        let m_1: bitstring = msg_4 in
+        event message_send_Alice(m_1,packet_number_3);
+        let msg_3: bitstring = enc(m_1,sak_alice_1) in
+        let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+        out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+    ) | (
+        in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+        let sci_A_6: bitstring = sci_A_7 in
+        get association_keys(=sci_2,=an_5,ska_A_2: key) in
+        (
+            get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                0
+            else
+                if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                event message_received_Bob(received_msg_2,packet_number_4)
+        )
+        else
+            let szk_6: key = szk_7 in
+            let n_key_2: key = kdf(szk_6,20) in
+            if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+            insert freshness(sci_A_6,an_5,packet_number_4);
+            let kek_3: key = kdf(szk_6,10) in
+            let sak_4: key = key_dec(x_2,kek_3) in
+            insert association_keys(sci_A_6,an_5,sak_4)
+    )
+)
+
+--------------------------------------------------------------
+The event message_received_Bob(a,a_1) is executed at {49}.
+The attacker has the message a in phase 2.
+A trace has been found, assuming the following hypothesis:
+attacker_p2(a[])
+goal reachable: attacker_p2(packet_number_5) && attacker_p2(m_2) -> event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)
+
+Derivation:
+
+1. We assume as hypothesis that
+attacker_p2(m_2).
+
+2. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+3. By 2, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+4. By 3, the attacker may know szk[] in phase 1.
+So the attacker may know szk[] in phase 2.
+attacker_p2(szk[]).
+
+5. We assume as hypothesis that
+attacker_p2(packet_number_5).
+
+6. Using the function 0 the attacker may obtain 0 in phase 2.
+attacker_p2(0).
+
+7. By 1, the attacker may know m_2 in phase 2.
+By 4, the attacker may know szk[] in phase 2.
+Using the function enc the attacker may obtain enc(m_2,szk[]) in phase 2.
+attacker_p2(enc(m_2,szk[])).
+
+8. By 7, the attacker may know enc(m_2,szk[]) in phase 2.
+By 6, the attacker may know 0 in phase 2.
+By 5, the attacker may know packet_number_5 in phase 2.
+By 4, the attacker may know szk[] in phase 2.
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_5,szk[]) in phase 2.
+attacker_p2(hmac(enc(m_2,szk[]),0,packet_number_5,szk[])).
+
+9. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+10. By 9, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+11. By 10, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+12. By 11, the attacker may know sci_A[] in phase 1.
+So the attacker may know sci_A[] in phase 2.
+attacker_p2(sci_A[]).
+
+13. By 12, the attacker may know sci_A[] in phase 2.
+By 6, the attacker may know 0 in phase 2.
+By 5, the attacker may know packet_number_5 in phase 2.
+By 7, the attacker may know enc(m_2,szk[]) in phase 2.
+By 8, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_5,szk[]) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) in phase 2.
+attacker_p2((sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[]))).
+
+14. The entry association_keys(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(association_keys(sci_A[],0,szk[])).
+
+15. By 14, a table may contain the entry association_keys(sci_A[],0,szk[]).
+So a table may contain the entry association_keys(sci_A[],0,szk[]) in phase 1.
+table_p1(association_keys(sci_A[],0,szk[])).
+
+16. By 15, a table may contain the entry association_keys(sci_A[],0,szk[]) in phase 1.
+So a table may contain the entry association_keys(sci_A[],0,szk[]) in phase 2.
+table_p2(association_keys(sci_A[],0,szk[])).
+
+17. The message (sci_A[],0,packet_number_5,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_5,szk[])) that the attacker may have in phase 2 by 13 may be received at input {73}.
+The entry association_keys(sci_A[],0,szk[]) that may be in a table in phase 2 by 16 may be read at get {85}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {77}.
+event(message_received_Bob(m_2,packet_number_5)).
+
+18. By 17, event(message_received_Bob(m_2,packet_number_5)).
+By 1, attacker_p2(m_2).
+The goals are reached, combined in the following fact:
+event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2).
+
+
+Could not find a trace corresponding to this derivation.
+RESULT not (event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)) cannot be proved.
+-- Query inj-event(message_received_Bob(m_2,packet_number_5)) ==> inj-event(message_send_Alice(m_2,packet_number_5)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 180 rules (58 with conclusion selected). Queue: 66 rules.
+400 rules inserted. Base: 230 rules (67 with conclusion selected). Queue: 101 rules.
+600 rules inserted. Base: 280 rules (93 with conclusion selected). Queue: 147 rules.
+800 rules inserted. Base: 350 rules (109 with conclusion selected). Queue: 218 rules.
+1000 rules inserted. Base: 402 rules (123 with conclusion selected). Queue: 290 rules.
+1200 rules inserted. Base: 502 rules (130 with conclusion selected). Queue: 353 rules.
+1400 rules inserted. Base: 491 rules (136 with conclusion selected). Queue: 349 rules.
+1600 rules inserted. Base: 520 rules (145 with conclusion selected). Queue: 351 rules.
+1800 rules inserted. Base: 547 rules (149 with conclusion selected). Queue: 356 rules.
+2000 rules inserted. Base: 556 rules (154 with conclusion selected). Queue: 328 rules.
+2200 rules inserted. Base: 587 rules (160 with conclusion selected). Queue: 304 rules.
+2400 rules inserted. Base: 567 rules (175 with conclusion selected). Queue: 250 rules.
+2600 rules inserted. Base: 517 rules (182 with conclusion selected). Queue: 182 rules.
+2800 rules inserted. Base: 476 rules (188 with conclusion selected). Queue: 111 rules.
+3000 rules inserted. Base: 411 rules (194 with conclusion selected). Queue: 38 rules.
+Starting query inj-event(message_received_Bob(m_2,packet_number_5)) ==> inj-event(message_send_Alice(m_2,packet_number_5))
+goal reachable: attacker_p2(m_2) && attacker_p2(an_6) && attacker_p2(packet_number_5) && attacker_p2(k) -> inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1)
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+Derivation:
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+1. We assume as hypothesis that
+attacker_p2(k).
+
+2. We assume as hypothesis that
+attacker_p2(packet_number_5).
+
+3. We assume as hypothesis that
+attacker_p2(an_6).
+
+4. We assume as hypothesis that
+attacker_p2(m_2).
+
+5. By 4, the attacker may know m_2 in phase 2.
+By 1, the attacker may know k in phase 2.
+Using the function enc the attacker may obtain enc(m_2,k) in phase 2.
+attacker_p2(enc(m_2,k)).
+
+6. By 5, the attacker may know enc(m_2,k) in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 2, the attacker may know packet_number_5 in phase 2.
+By 1, the attacker may know k in phase 2.
+Using the function hmac the attacker may obtain hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+attacker_p2(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+7. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+8. By 7, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+9. By 8, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+10. By 9, the attacker may know sci_A[] in phase 1.
+So the attacker may know sci_A[] in phase 2.
+attacker_p2(sci_A[]).
+
+11. By 10, the attacker may know sci_A[] in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 2, the attacker may know packet_number_5 in phase 2.
+By 5, the attacker may know enc(m_2,k) in phase 2.
+By 6, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) in phase 2.
+attacker_p2((sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k))).
+
+12. Using the function 0 the attacker may obtain 0 in phase 2.
+attacker_p2(0).
+
+13. By 12, the attacker may know 0 in phase 2.
+Using the function + the attacker may obtain 1 in phase 2.
+attacker_p2(1).
+
+14. By 13, the attacker may know 1 in phase 2.
+Using the function + the attacker may obtain 2 in phase 2.
+attacker_p2(2).
+
+15. By 14, the attacker may know 2 in phase 2.
+Using the function + the attacker may obtain 3 in phase 2.
+attacker_p2(3).
+
+16. By 15, the attacker may know 3 in phase 2.
+Using the function + the attacker may obtain 4 in phase 2.
+attacker_p2(4).
+
+17. By 16, the attacker may know 4 in phase 2.
+Using the function + the attacker may obtain 5 in phase 2.
+attacker_p2(5).
+
+18. By 17, the attacker may know 5 in phase 2.
+Using the function + the attacker may obtain 6 in phase 2.
+attacker_p2(6).
+
+19. By 18, the attacker may know 6 in phase 2.
+Using the function + the attacker may obtain 7 in phase 2.
+attacker_p2(7).
+
+20. By 19, the attacker may know 7 in phase 2.
+Using the function + the attacker may obtain 8 in phase 2.
+attacker_p2(8).
+
+21. By 20, the attacker may know 8 in phase 2.
+Using the function + the attacker may obtain 9 in phase 2.
+attacker_p2(9).
+
+22. By 21, the attacker may know 9 in phase 2.
+Using the function + the attacker may obtain 10 in phase 2.
+attacker_p2(10).
+
+23. By 22, the attacker may know 10 in phase 2.
+Using the function + the attacker may obtain 11 in phase 2.
+attacker_p2(11).
+
+24. By 23, the attacker may know 11 in phase 2.
+Using the function + the attacker may obtain 12 in phase 2.
+attacker_p2(12).
+
+25. By 24, the attacker may know 12 in phase 2.
+Using the function + the attacker may obtain 13 in phase 2.
+attacker_p2(13).
+
+26. By 25, the attacker may know 13 in phase 2.
+Using the function + the attacker may obtain 14 in phase 2.
+attacker_p2(14).
+
+27. By 26, the attacker may know 14 in phase 2.
+Using the function + the attacker may obtain 15 in phase 2.
+attacker_p2(15).
+
+28. By 27, the attacker may know 15 in phase 2.
+Using the function + the attacker may obtain 16 in phase 2.
+attacker_p2(16).
+
+29. By 28, the attacker may know 16 in phase 2.
+Using the function + the attacker may obtain 17 in phase 2.
+attacker_p2(17).
+
+30. By 29, the attacker may know 17 in phase 2.
+Using the function + the attacker may obtain 18 in phase 2.
+attacker_p2(18).
+
+31. By 30, the attacker may know 18 in phase 2.
+Using the function + the attacker may obtain 19 in phase 2.
+attacker_p2(19).
+
+32. By 31, the attacker may know 19 in phase 2.
+Using the function + the attacker may obtain 20 in phase 2.
+attacker_p2(20).
+
+33. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+34. By 33, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+35. By 34, the attacker may know szk[] in phase 1.
+So the attacker may know szk[] in phase 2.
+attacker_p2(szk[]).
+
+36. By 35, the attacker may know szk[] in phase 2.
+By 32, the attacker may know 20 in phase 2.
+Using the function kdf the attacker may obtain kdf(szk[],20) in phase 2.
+attacker_p2(kdf(szk[],20)).
+
+37. By 35, the attacker may know szk[] in phase 2.
+By 22, the attacker may know 10 in phase 2.
+Using the function kdf the attacker may obtain kdf(szk[],10) in phase 2.
+attacker_p2(kdf(szk[],10)).
+
+38. By 1, the attacker may know k in phase 2.
+By 37, the attacker may know kdf(szk[],10) in phase 2.
+Using the function key_enc the attacker may obtain key_enc(k,kdf(szk[],10)) in phase 2.
+attacker_p2(key_enc(k,kdf(szk[],10))).
+
+39. By 38, the attacker may know key_enc(k,kdf(szk[],10)) in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 13, the attacker may know 1 in phase 2.
+By 36, the attacker may know kdf(szk[],20) in phase 2.
+Using the function hmac the attacker may obtain hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)) in phase 2.
+attacker_p2(hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))).
+
+40. By 10, the attacker may know sci_A[] in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 13, the attacker may know 1 in phase 2.
+By 38, the attacker may know key_enc(k,kdf(szk[],10)) in phase 2.
+By 39, the attacker may know hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) in phase 2.
+attacker_p2((sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)))).
+
+41. The message (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) that the attacker may have in phase 2 by 40 may be received at input {73}.
+So the entry association_keys(sci_A[],an_6,k) may be inserted in a table in phase 2 at insert {84}.
+table_p2(association_keys(sci_A[],an_6,k)).
+
+42. The message (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) that the attacker may have in phase 2 by 11 may be received at input {73}.
+The entry association_keys(sci_A[],an_6,k) that may be in a table in phase 2 by 41 may be read at get {85}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {77}.
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+43. By 42, inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+The goal is reached, represented in the following fact:
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+
+Unified m_2 with dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20))
+Unified packet_number_5 with 1
+Unified k with kdf(szk[],20)
+The clause after UnifyDerivationPrecise is
+attacker_p2(an_6) && attacker_p2(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20))) -> inj-event(message_received_Bob(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20)),1),@occ77[ska_A_2 = kdf(szk[],20),icv_3 = hmac(enc(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20)),kdf(szk[],20)),an_6,1,kdf(szk[],20)),x_2 = enc(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20)),kdf(szk[],20)),packet_number_4 = 1,an_5 = an_6,sci_2 = sci_A[]])
+This clause still contradicts the query.
+Could not find a trace corresponding to this derivation.
+goal reachable: attacker_p2(an_6) && attacker_p2(packet_number_5) && attacker_p1(m_2) && attacker_p1(an_6) && attacker_p1(packet_number_5) && attacker_p1(k) -> inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1)
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+Derivation:
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+1. We assume as hypothesis that
+attacker_p1(k).
+
+2. We assume as hypothesis that
+attacker_p1(packet_number_5).
+
+3. We assume as hypothesis that
+attacker_p1(an_6).
+
+4. We assume as hypothesis that
+attacker_p1(m_2).
+
+5. By 4, the attacker may know m_2 in phase 1.
+By 1, the attacker may know k in phase 1.
+Using the function enc the attacker may obtain enc(m_2,k) in phase 1.
+attacker_p1(enc(m_2,k)).
+
+6. By 5, the attacker may know enc(m_2,k) in phase 1.
+By 3, the attacker may know an_6 in phase 1.
+By 2, the attacker may know packet_number_5 in phase 1.
+By 1, the attacker may know k in phase 1.
+Using the function hmac the attacker may obtain hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 1.
+attacker_p1(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+7. By 6, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 1.
+So the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+attacker_p2(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+8. By 5, the attacker may know enc(m_2,k) in phase 1.
+So the attacker may know enc(m_2,k) in phase 2.
+attacker_p2(enc(m_2,k)).
+
+9. We assume as hypothesis that
+attacker_p2(packet_number_5).
+
+10. We assume as hypothesis that
+attacker_p2(an_6).
+
+11. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+12. By 11, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+13. By 12, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+14. By 13, the attacker may know sci_A[] in phase 1.
+So the attacker may know sci_A[] in phase 2.
+attacker_p2(sci_A[]).
+
+15. By 14, the attacker may know sci_A[] in phase 2.
+By 10, the attacker may know an_6 in phase 2.
+By 9, the attacker may know packet_number_5 in phase 2.
+By 8, the attacker may know enc(m_2,k) in phase 2.
+By 7, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) in phase 2.
+attacker_p2((sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k))).
+
+16. Using the function 0 the attacker may obtain 0 in phase 1.
+attacker_p1(0).
+
+17. By 16, the attacker may know 0 in phase 1.
+Using the function + the attacker may obtain 1 in phase 1.
+attacker_p1(1).
+
+18. By 17, the attacker may know 1 in phase 1.
+Using the function + the attacker may obtain 2 in phase 1.
+attacker_p1(2).
+
+19. By 18, the attacker may know 2 in phase 1.
+Using the function + the attacker may obtain 3 in phase 1.
+attacker_p1(3).
+
+20. By 19, the attacker may know 3 in phase 1.
+Using the function + the attacker may obtain 4 in phase 1.
+attacker_p1(4).
+
+21. By 20, the attacker may know 4 in phase 1.
+Using the function + the attacker may obtain 5 in phase 1.
+attacker_p1(5).
+
+22. By 21, the attacker may know 5 in phase 1.
+Using the function + the attacker may obtain 6 in phase 1.
+attacker_p1(6).
+
+23. By 22, the attacker may know 6 in phase 1.
+Using the function + the attacker may obtain 7 in phase 1.
+attacker_p1(7).
+
+24. By 23, the attacker may know 7 in phase 1.
+Using the function + the attacker may obtain 8 in phase 1.
+attacker_p1(8).
+
+25. By 24, the attacker may know 8 in phase 1.
+Using the function + the attacker may obtain 9 in phase 1.
+attacker_p1(9).
+
+26. By 25, the attacker may know 9 in phase 1.
+Using the function + the attacker may obtain 10 in phase 1.
+attacker_p1(10).
+
+27. By 26, the attacker may know 10 in phase 1.
+Using the function + the attacker may obtain 11 in phase 1.
+attacker_p1(11).
+
+28. By 27, the attacker may know 11 in phase 1.
+Using the function + the attacker may obtain 12 in phase 1.
+attacker_p1(12).
+
+29. By 28, the attacker may know 12 in phase 1.
+Using the function + the attacker may obtain 13 in phase 1.
+attacker_p1(13).
+
+30. By 29, the attacker may know 13 in phase 1.
+Using the function + the attacker may obtain 14 in phase 1.
+attacker_p1(14).
+
+31. By 30, the attacker may know 14 in phase 1.
+Using the function + the attacker may obtain 15 in phase 1.
+attacker_p1(15).
+
+32. By 31, the attacker may know 15 in phase 1.
+Using the function + the attacker may obtain 16 in phase 1.
+attacker_p1(16).
+
+33. By 32, the attacker may know 16 in phase 1.
+Using the function + the attacker may obtain 17 in phase 1.
+attacker_p1(17).
+
+34. By 33, the attacker may know 17 in phase 1.
+Using the function + the attacker may obtain 18 in phase 1.
+attacker_p1(18).
+
+35. By 34, the attacker may know 18 in phase 1.
+Using the function + the attacker may obtain 19 in phase 1.
+attacker_p1(19).
+
+36. By 35, the attacker may know 19 in phase 1.
+Using the function + the attacker may obtain 20 in phase 1.
+attacker_p1(20).
+
+37. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+38. By 37, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+39. By 38, the attacker may know szk[] in phase 1.
+By 36, the attacker may know 20 in phase 1.
+Using the function kdf the attacker may obtain kdf(szk[],20) in phase 1.
+attacker_p1(kdf(szk[],20)).
+
+40. By 38, the attacker may know szk[] in phase 1.
+By 26, the attacker may know 10 in phase 1.
+Using the function kdf the attacker may obtain kdf(szk[],10) in phase 1.
+attacker_p1(kdf(szk[],10)).
+
+41. By 1, the attacker may know k in phase 1.
+By 40, the attacker may know kdf(szk[],10) in phase 1.
+Using the function key_enc the attacker may obtain key_enc(k,kdf(szk[],10)) in phase 1.
+attacker_p1(key_enc(k,kdf(szk[],10))).
+
+42. By 41, the attacker may know key_enc(k,kdf(szk[],10)) in phase 1.
+By 3, the attacker may know an_6 in phase 1.
+By 17, the attacker may know 1 in phase 1.
+By 39, the attacker may know kdf(szk[],20) in phase 1.
+Using the function hmac the attacker may obtain hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)) in phase 1.
+attacker_p1(hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))).
+
+43. By 13, the attacker may know sci_A[] in phase 1.
+By 3, the attacker may know an_6 in phase 1.
+By 17, the attacker may know 1 in phase 1.
+By 41, the attacker may know key_enc(k,kdf(szk[],10)) in phase 1.
+By 42, the attacker may know hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)) in phase 1.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) in phase 1.
+attacker_p1((sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)))).
+
+44. The message (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) that the attacker may have in phase 1 by 43 may be received at input {45}.
+So the entry association_keys(sci_A[],an_6,k) may be inserted in a table in phase 1 at insert {56}.
+table_p1(association_keys(sci_A[],an_6,k)).
+
+45. By 44, a table may contain the entry association_keys(sci_A[],an_6,k) in phase 1.
+So a table may contain the entry association_keys(sci_A[],an_6,k) in phase 2.
+table_p2(association_keys(sci_A[],an_6,k)).
+
+46. The message (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) that the attacker may have in phase 2 by 15 may be received at input {73}.
+The entry association_keys(sci_A[],an_6,k) that may be in a table in phase 2 by 45 may be read at get {85}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {77}.
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+47. By 46, inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+The goal is reached, represented in the following fact:
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+
+Could not find a trace corresponding to this derivation.
+goal reachable: attacker_p1(m_2) && attacker_p1(k) && attacker_p2(an_6) && attacker_p2(packet_number_5) && attacker_p2(k) -> inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1)
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+Derivation:
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+1. We assume as hypothesis that
+attacker_p2(k).
+
+2. We assume as hypothesis that
+attacker_p2(packet_number_5).
+
+3. We assume as hypothesis that
+attacker_p2(an_6).
+
+4. We assume as hypothesis that
+attacker_p1(k).
+
+5. We assume as hypothesis that
+attacker_p1(m_2).
+
+6. By 5, the attacker may know m_2 in phase 1.
+By 4, the attacker may know k in phase 1.
+Using the function enc the attacker may obtain enc(m_2,k) in phase 1.
+attacker_p1(enc(m_2,k)).
+
+7. By 6, the attacker may know enc(m_2,k) in phase 1.
+So the attacker may know enc(m_2,k) in phase 2.
+attacker_p2(enc(m_2,k)).
+
+8. By 7, the attacker may know enc(m_2,k) in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 2, the attacker may know packet_number_5 in phase 2.
+By 1, the attacker may know k in phase 2.
+Using the function hmac the attacker may obtain hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+attacker_p2(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+9. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+10. By 9, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+11. By 10, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+12. By 11, the attacker may know sci_A[] in phase 1.
+So the attacker may know sci_A[] in phase 2.
+attacker_p2(sci_A[]).
+
+13. By 12, the attacker may know sci_A[] in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 2, the attacker may know packet_number_5 in phase 2.
+By 7, the attacker may know enc(m_2,k) in phase 2.
+By 8, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) in phase 2.
+attacker_p2((sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k))).
+
+14. Using the function 0 the attacker may obtain 0 in phase 2.
+attacker_p2(0).
+
+15. By 14, the attacker may know 0 in phase 2.
+Using the function + the attacker may obtain 1 in phase 2.
+attacker_p2(1).
+
+16. By 15, the attacker may know 1 in phase 2.
+Using the function + the attacker may obtain 2 in phase 2.
+attacker_p2(2).
+
+17. By 16, the attacker may know 2 in phase 2.
+Using the function + the attacker may obtain 3 in phase 2.
+attacker_p2(3).
+
+18. By 17, the attacker may know 3 in phase 2.
+Using the function + the attacker may obtain 4 in phase 2.
+attacker_p2(4).
+
+19. By 18, the attacker may know 4 in phase 2.
+Using the function + the attacker may obtain 5 in phase 2.
+attacker_p2(5).
+
+20. By 19, the attacker may know 5 in phase 2.
+Using the function + the attacker may obtain 6 in phase 2.
+attacker_p2(6).
+
+21. By 20, the attacker may know 6 in phase 2.
+Using the function + the attacker may obtain 7 in phase 2.
+attacker_p2(7).
+
+22. By 21, the attacker may know 7 in phase 2.
+Using the function + the attacker may obtain 8 in phase 2.
+attacker_p2(8).
+
+23. By 22, the attacker may know 8 in phase 2.
+Using the function + the attacker may obtain 9 in phase 2.
+attacker_p2(9).
+
+24. By 23, the attacker may know 9 in phase 2.
+Using the function + the attacker may obtain 10 in phase 2.
+attacker_p2(10).
+
+25. By 24, the attacker may know 10 in phase 2.
+Using the function + the attacker may obtain 11 in phase 2.
+attacker_p2(11).
+
+26. By 25, the attacker may know 11 in phase 2.
+Using the function + the attacker may obtain 12 in phase 2.
+attacker_p2(12).
+
+27. By 26, the attacker may know 12 in phase 2.
+Using the function + the attacker may obtain 13 in phase 2.
+attacker_p2(13).
+
+28. By 27, the attacker may know 13 in phase 2.
+Using the function + the attacker may obtain 14 in phase 2.
+attacker_p2(14).
+
+29. By 28, the attacker may know 14 in phase 2.
+Using the function + the attacker may obtain 15 in phase 2.
+attacker_p2(15).
+
+30. By 29, the attacker may know 15 in phase 2.
+Using the function + the attacker may obtain 16 in phase 2.
+attacker_p2(16).
+
+31. By 30, the attacker may know 16 in phase 2.
+Using the function + the attacker may obtain 17 in phase 2.
+attacker_p2(17).
+
+32. By 31, the attacker may know 17 in phase 2.
+Using the function + the attacker may obtain 18 in phase 2.
+attacker_p2(18).
+
+33. By 32, the attacker may know 18 in phase 2.
+Using the function + the attacker may obtain 19 in phase 2.
+attacker_p2(19).
+
+34. By 33, the attacker may know 19 in phase 2.
+Using the function + the attacker may obtain 20 in phase 2.
+attacker_p2(20).
+
+35. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+36. By 35, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+37. By 36, the attacker may know szk[] in phase 1.
+So the attacker may know szk[] in phase 2.
+attacker_p2(szk[]).
+
+38. By 37, the attacker may know szk[] in phase 2.
+By 34, the attacker may know 20 in phase 2.
+Using the function kdf the attacker may obtain kdf(szk[],20) in phase 2.
+attacker_p2(kdf(szk[],20)).
+
+39. By 37, the attacker may know szk[] in phase 2.
+By 24, the attacker may know 10 in phase 2.
+Using the function kdf the attacker may obtain kdf(szk[],10) in phase 2.
+attacker_p2(kdf(szk[],10)).
+
+40. By 1, the attacker may know k in phase 2.
+By 39, the attacker may know kdf(szk[],10) in phase 2.
+Using the function key_enc the attacker may obtain key_enc(k,kdf(szk[],10)) in phase 2.
+attacker_p2(key_enc(k,kdf(szk[],10))).
+
+41. By 40, the attacker may know key_enc(k,kdf(szk[],10)) in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 15, the attacker may know 1 in phase 2.
+By 38, the attacker may know kdf(szk[],20) in phase 2.
+Using the function hmac the attacker may obtain hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)) in phase 2.
+attacker_p2(hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))).
+
+42. By 12, the attacker may know sci_A[] in phase 2.
+By 3, the attacker may know an_6 in phase 2.
+By 15, the attacker may know 1 in phase 2.
+By 40, the attacker may know key_enc(k,kdf(szk[],10)) in phase 2.
+By 41, the attacker may know hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) in phase 2.
+attacker_p2((sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)))).
+
+43. The message (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) that the attacker may have in phase 2 by 42 may be received at input {73}.
+So the entry association_keys(sci_A[],an_6,k) may be inserted in a table in phase 2 at insert {84}.
+table_p2(association_keys(sci_A[],an_6,k)).
+
+44. The message (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) that the attacker may have in phase 2 by 13 may be received at input {73}.
+The entry association_keys(sci_A[],an_6,k) that may be in a table in phase 2 by 43 may be read at get {85}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {77}.
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+45. By 44, inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+The goal is reached, represented in the following fact:
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+
+Unified m_2 with dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20))
+Unified packet_number_5 with 1
+Unified k with kdf(szk[],20)
+The clause after UnifyDerivationPrecise is
+attacker_p2(an_6) && attacker_p1(kdf(szk[],20)) && attacker_p1(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20))) -> inj-event(message_received_Bob(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20)),1),@occ77[ska_A_2 = kdf(szk[],20),icv_3 = hmac(enc(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20)),kdf(szk[],20)),an_6,1,kdf(szk[],20)),x_2 = enc(dec(key_enc(kdf(szk[],20),kdf(szk[],10)),kdf(szk[],20)),kdf(szk[],20)),packet_number_4 = 1,an_5 = an_6,sci_2 = sci_A[]])
+This clause still contradicts the query.
+Could not find a trace corresponding to this derivation.
+goal reachable: attacker_p2(an_6) && attacker_p2(packet_number_5) && attacker(m_2) && attacker(an_6) && attacker(packet_number_5) && attacker(k) -> inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1)
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+Derivation:
+Abbreviations:
+@occ77_1 = @occ77[ska_A_2 = k,icv_3 = hmac(enc(m_2,k),an_6,packet_number_5,k),x_2 = enc(m_2,k),packet_number_4 = packet_number_5,an_5 = an_6,sci_2 = sci_A[]]
+
+1. We assume as hypothesis that
+attacker(k).
+
+2. We assume as hypothesis that
+attacker(packet_number_5).
+
+3. We assume as hypothesis that
+attacker(an_6).
+
+4. We assume as hypothesis that
+attacker(m_2).
+
+5. By 4, the attacker may know m_2.
+By 1, the attacker may know k.
+Using the function enc the attacker may obtain enc(m_2,k).
+attacker(enc(m_2,k)).
+
+6. By 5, the attacker may know enc(m_2,k).
+By 3, the attacker may know an_6.
+By 2, the attacker may know packet_number_5.
+By 1, the attacker may know k.
+Using the function hmac the attacker may obtain hmac(enc(m_2,k),an_6,packet_number_5,k).
+attacker(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+7. By 6, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k).
+So the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 1.
+attacker_p1(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+8. By 7, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 1.
+So the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+attacker_p2(hmac(enc(m_2,k),an_6,packet_number_5,k)).
+
+9. By 5, the attacker may know enc(m_2,k).
+So the attacker may know enc(m_2,k) in phase 1.
+attacker_p1(enc(m_2,k)).
+
+10. By 9, the attacker may know enc(m_2,k) in phase 1.
+So the attacker may know enc(m_2,k) in phase 2.
+attacker_p2(enc(m_2,k)).
+
+11. We assume as hypothesis that
+attacker_p2(packet_number_5).
+
+12. We assume as hypothesis that
+attacker_p2(an_6).
+
+13. The message (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))) may be sent to the attacker at output {16}.
+attacker((sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20)))).
+
+14. By 13, the attacker may know (sci_A[],0,1,key_enc(sak[],kdf(szk[],10)),hmac(key_enc(sak[],kdf(szk[],10)),0,1,kdf(szk[],20))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+15. By 14, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+16. By 15, the attacker may know sci_A[] in phase 1.
+So the attacker may know sci_A[] in phase 2.
+attacker_p2(sci_A[]).
+
+17. By 16, the attacker may know sci_A[] in phase 2.
+By 12, the attacker may know an_6 in phase 2.
+By 11, the attacker may know packet_number_5 in phase 2.
+By 10, the attacker may know enc(m_2,k) in phase 2.
+By 8, the attacker may know hmac(enc(m_2,k),an_6,packet_number_5,k) in phase 2.
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) in phase 2.
+attacker_p2((sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k))).
+
+18. Using the function 0 the attacker may obtain 0.
+attacker(0).
+
+19. By 18, the attacker may know 0.
+Using the function + the attacker may obtain 1.
+attacker(1).
+
+20. By 19, the attacker may know 1.
+Using the function + the attacker may obtain 2.
+attacker(2).
+
+21. By 20, the attacker may know 2.
+Using the function + the attacker may obtain 3.
+attacker(3).
+
+22. By 21, the attacker may know 3.
+Using the function + the attacker may obtain 4.
+attacker(4).
+
+23. By 22, the attacker may know 4.
+Using the function + the attacker may obtain 5.
+attacker(5).
+
+24. By 23, the attacker may know 5.
+Using the function + the attacker may obtain 6.
+attacker(6).
+
+25. By 24, the attacker may know 6.
+Using the function + the attacker may obtain 7.
+attacker(7).
+
+26. By 25, the attacker may know 7.
+Using the function + the attacker may obtain 8.
+attacker(8).
+
+27. By 26, the attacker may know 8.
+Using the function + the attacker may obtain 9.
+attacker(9).
+
+28. By 27, the attacker may know 9.
+Using the function + the attacker may obtain 10.
+attacker(10).
+
+29. By 28, the attacker may know 10.
+Using the function + the attacker may obtain 11.
+attacker(11).
+
+30. By 29, the attacker may know 11.
+Using the function + the attacker may obtain 12.
+attacker(12).
+
+31. By 30, the attacker may know 12.
+Using the function + the attacker may obtain 13.
+attacker(13).
+
+32. By 31, the attacker may know 13.
+Using the function + the attacker may obtain 14.
+attacker(14).
+
+33. By 32, the attacker may know 14.
+Using the function + the attacker may obtain 15.
+attacker(15).
+
+34. By 33, the attacker may know 15.
+Using the function + the attacker may obtain 16.
+attacker(16).
+
+35. By 34, the attacker may know 16.
+Using the function + the attacker may obtain 17.
+attacker(17).
+
+36. By 35, the attacker may know 17.
+Using the function + the attacker may obtain 18.
+attacker(18).
+
+37. By 36, the attacker may know 18.
+Using the function + the attacker may obtain 19.
+attacker(19).
+
+38. By 37, the attacker may know 19.
+Using the function + the attacker may obtain 20.
+attacker(20).
+
+39. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+40. By 39, the attacker may know szk[].
+By 38, the attacker may know 20.
+Using the function kdf the attacker may obtain kdf(szk[],20).
+attacker(kdf(szk[],20)).
+
+41. By 39, the attacker may know szk[].
+By 28, the attacker may know 10.
+Using the function kdf the attacker may obtain kdf(szk[],10).
+attacker(kdf(szk[],10)).
+
+42. By 1, the attacker may know k.
+By 41, the attacker may know kdf(szk[],10).
+Using the function key_enc the attacker may obtain key_enc(k,kdf(szk[],10)).
+attacker(key_enc(k,kdf(szk[],10))).
+
+43. By 42, the attacker may know key_enc(k,kdf(szk[],10)).
+By 3, the attacker may know an_6.
+By 19, the attacker may know 1.
+By 40, the attacker may know kdf(szk[],20).
+Using the function hmac the attacker may obtain hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)).
+attacker(hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))).
+
+44. By 14, the attacker may know sci_A[].
+By 3, the attacker may know an_6.
+By 19, the attacker may know 1.
+By 42, the attacker may know key_enc(k,kdf(szk[],10)).
+By 43, the attacker may know hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)).
+Using the function 5-tuple the attacker may obtain (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))).
+attacker((sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20)))).
+
+45. The message (sci_A[],an_6,1,key_enc(k,kdf(szk[],10)),hmac(key_enc(k,kdf(szk[],10)),an_6,1,kdf(szk[],20))) that the attacker may have by 44 may be received at input {19}.
+So the entry association_keys(sci_A[],an_6,k) may be inserted in a table at insert {30}.
+table(association_keys(sci_A[],an_6,k)).
+
+46. By 45, a table may contain the entry association_keys(sci_A[],an_6,k).
+So a table may contain the entry association_keys(sci_A[],an_6,k) in phase 1.
+table_p1(association_keys(sci_A[],an_6,k)).
+
+47. By 46, a table may contain the entry association_keys(sci_A[],an_6,k) in phase 1.
+So a table may contain the entry association_keys(sci_A[],an_6,k) in phase 2.
+table_p2(association_keys(sci_A[],an_6,k)).
+
+48. The message (sci_A[],an_6,packet_number_5,enc(m_2,k),hmac(enc(m_2,k),an_6,packet_number_5,k)) that the attacker may have in phase 2 by 17 may be received at input {73}.
+The entry association_keys(sci_A[],an_6,k) that may be in a table in phase 2 by 47 may be read at get {85}.
+So event message_received_Bob(m_2,packet_number_5) may be executed at {77}.
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+49. By 48, inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+The goal is reached, represented in the following fact:
+inj-event(message_received_Bob(m_2,packet_number_5),@occ77_1).
+
+
+Initial state
+
+Additional knowledge of the attacker:
+scA
+a
+a_1
+a_2
+hmac(enc(a_3,a),a_2,a_1,a)
+enc(a_3,a)
+a_3
+--------------------------------------------------------------
+New processes:
+    new szk: key;
+    out(scA, szk);
+    new sci_A: bitstring;
+    new msg: bitstring;
+    insert freshness(sci_A,0,0);
+    insert association_keys(sci_A,0,szk);
+    let an: nat = 0 in
+    (
+        new sak: key;
+        let szk_1: key = szk in
+        let kek: key = kdf(szk_1,10) in
+        let msg_1: bitstring = key_enc(sak,kek) in
+        let ick: key = kdf(szk_1,20) in
+        let icv: bitstring = hmac(msg_1,an,1,ick) in
+        let fresh: nat = 1 in
+        let sci_A_1: bitstring = sci_A in
+        out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    ) | (
+        in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+        let sci_A_2: bitstring = sci_A in
+        get association_keys(=sci,=an_1,ska_A: key) in
+        (
+            get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+                0
+            else
+                if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+                insert freshness(sci_A_2,an_1,packet_number);
+                let received_msg: bitstring = dec(x,ska_A) in
+                event message_received_Bob(received_msg,packet_number)
+        )
+        else
+            let szk_2: key = szk in
+            let n_key: key = kdf(szk_2,20) in
+            if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+            insert freshness(sci_A_2,an_1,packet_number);
+            let kek_1: key = kdf(szk_2,10) in
+            let sak_1: key = key_dec(x,kek_1) in
+            insert association_keys(sci_A_2,an_1,sak_1)
+    ) | (
+        phase 1;
+        (
+            let an_2: nat = 1 in
+            let sci_A_3: bitstring = sci_A in
+            get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+            let packet_number_1: nat = 2 in
+            let m: bitstring = msg in
+            event message_send_Alice(m,packet_number_1);
+            let msg_2: bitstring = enc(m,sak_alice) in
+            let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+            out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+        ) | (
+            in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+            let sci_A_4: bitstring = sci_A in
+            get association_keys(=sci_1,=an_3,ska_A_1: key) in
+            (
+                get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                    0
+                else
+                    if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                    insert freshness(sci_A_4,an_3,packet_number_2);
+                    let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                    event message_received_Bob(received_msg_1,packet_number_2)
+            )
+            else
+                let szk_4: key = szk in
+                let n_key_1: key = kdf(szk_4,20) in
+                if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let kek_2: key = kdf(szk_4,10) in
+                let sak_2: key = key_dec(x_1,kek_2) in
+                insert association_keys(sci_A_4,an_3,sak_2)
+        ) | (
+            phase 2;
+            new sak_3: key;
+            insert association_keys(sci_A,an + 1,sak_3);
+            (
+                let an_4: nat = an + 1 in
+                let sci_A_5: bitstring = sci_A in
+                get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+                let packet_number_3: nat = 2 in
+                let m_1: bitstring = msg in
+                event message_send_Alice(m_1,packet_number_3);
+                let msg_3: bitstring = enc(m_1,sak_alice_1) in
+                let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+                out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+            ) | (
+                in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+                let sci_A_6: bitstring = sci_A in
+                get association_keys(=sci_2,=an_5,ska_A_2: key) in
+                (
+                    get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                        0
+                    else
+                        if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                        insert freshness(sci_A_6,an_5,packet_number_4);
+                        let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                        event message_received_Bob(received_msg_2,packet_number_4)
+                )
+                else
+                    let szk_6: key = szk in
+                    let n_key_2: key = kdf(szk_6,20) in
+                    if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let kek_3: key = kdf(szk_6,10) in
+                    let sak_4: key = key_dec(x_2,kek_3) in
+                    insert association_keys(sci_A_6,an_5,sak_4)
+            )
+        )
+    )
+
+--------------------------------------------------------------
+1st process: new szk: key creating szk_7
+
+1st process: out(scA, ~M) with ~M = szk_7 done
+
+Additional knowledge of the attacker:
+hmac(key_enc(a,kdf(~M,10)),a_2,1,kdf(~M,20)) = hmac(key_enc(a,kdf(szk_7,10)),a_2,1,kdf(szk_7,20))
+key_enc(a,kdf(~M,10)) = key_enc(a,kdf(szk_7,10))
+kdf(~M,10) = kdf(szk_7,10)
+kdf(~M,20) = kdf(szk_7,20)
+~M = szk_7
+--------------------------------------------------------------
+1st process: new sci_A: bitstring creating sci_A_7
+
+1st process: new msg: bitstring creating msg_4
+
+1st process: insert freshness(sci_A_7,0,0) done
+
+1st process: insert association_keys(sci_A_7,0,szk_7) done
+
+1st process: let an: nat = 0 succeeds
+
+1st process: Reduction |
+
+1st process: Reduction |
+
+2nd process: Beginning of process Bob
+
+1st process: Beginning of process Trant
+
+1st process: new sak: key creating sak_5
+
+1st process: let szk_1: key = szk_7 succeeds
+
+1st process: let kek: key = kdf(szk_7,10) succeeds
+
+1st process: let msg_1: bitstring = key_enc(sak_5,kdf(szk_7,10)) succeeds
+
+1st process: let ick: key = kdf(szk_7,20) succeeds
+
+1st process: let icv: bitstring = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20)) succeeds
+
+1st process: let fresh: nat = 1 succeeds
+
+1st process: let sci_A_1: bitstring = sci_A_7 succeeds
+
+1st process: out(scA, (~M_1,0,1,~M_2,~M_3)) with ~M_1 = sci_A_7, ~M_2 = key_enc(sak_5,kdf(szk_7,10)), ~M_3 = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20)) done
+
+Additional knowledge of the attacker:
+~M_3 = hmac(key_enc(sak_5,kdf(szk_7,10)),0,1,kdf(szk_7,20))
+~M_2 = key_enc(sak_5,kdf(szk_7,10))
+~M_1 = sci_A_7
+--------------------------------------------------------------
+1st process: Reduction 0
+
+New processes:
+(
+    in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring));
+    let sci_A_2: bitstring = sci_A_7 in
+    get association_keys(=sci,=an_1,ska_A: key) in
+    (
+        get freshness(=sci,=an_1,fv: nat) suchthat (fv ≥ packet_number) in
+            0
+        else
+            if ((sci = sci_A_2) && (icv_1 = hmac(x,an_1,packet_number,ska_A))) then
+            insert freshness(sci_A_2,an_1,packet_number);
+            let received_msg: bitstring = dec(x,ska_A) in
+            event message_received_Bob(received_msg,packet_number)
+    )
+    else
+        let szk_2: key = szk_7 in
+        let n_key: key = kdf(szk_2,20) in
+        if ((sci = sci_A_2) && ((packet_number = 1) && (icv_1 = hmac(x,an_1,packet_number,n_key)))) then
+        insert freshness(sci_A_2,an_1,packet_number);
+        let kek_1: key = kdf(szk_2,10) in
+        let sak_1: key = key_dec(x,kek_1) in
+        insert association_keys(sci_A_2,an_1,sak_1)
+) | (
+    phase 1;
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+)
+
+--------------------------------------------------------------
+1st process: in(scA, (sci: bitstring,an_1: nat,packet_number: nat,x: bitstring,icv_1: bitstring)) done with message (~M_1,a_2,1,key_enc(a,kdf(~M,10)),hmac(key_enc(a,kdf(~M,10)),a_2,1,kdf(~M,20))) = (sci_A_7,a_2,1,key_enc(a,kdf(szk_7,10)),hmac(key_enc(a,kdf(szk_7,10)),a_2,1,kdf(szk_7,20)))
+
+1st process: let sci_A_2: bitstring = sci_A_7 succeeds
+
+1st process: get association_keys(=sci_A_7,=a_2,ska_A: key): else branch taken
+
+1st process: let szk_2: key = szk_7 succeeds
+
+1st process: let n_key: key = kdf(szk_7,20) succeeds
+
+1st process: if ((sci_A_7 = sci_A_7) && ((1 = 1) && (hmac(key_enc(a,kdf(szk_7,10)),a_2,1,kdf(szk_7,20)) = hmac(key_enc(a,kdf(szk_7,10)),a_2,1,kdf(szk_7,20))))) succeeds
+
+1st process: insert freshness(sci_A_7,a_2,1) done
+
+1st process: let kek_1: key = kdf(szk_7,10) succeeds
+
+1st process: let sak_1: key = key_dec(key_enc(a,kdf(szk_7,10)),kdf(szk_7,10)) succeeds
+
+1st process: insert association_keys(sci_A_7,a_2,key_dec(key_enc(a,kdf(szk_7,10)),kdf(szk_7,10))) done
+
+1st process: Reduction 0
+
+New processes:
+    phase 1;
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+
+--------------------------------------------------------------
+Switching to phase 1
+
+New processes:
+    (
+        let an_2: nat = 1 in
+        let sci_A_3: bitstring = sci_A_7 in
+        get association_keys(=sci_A_3,=an_2,sak_alice: key) in
+        let packet_number_1: nat = 2 in
+        let m: bitstring = msg_4 in
+        event message_send_Alice(m,packet_number_1);
+        let msg_2: bitstring = enc(m,sak_alice) in
+        let icv2: bitstring = hmac(msg_2,an_2,packet_number_1,sak_alice) in
+        out(scA, (sci_A_3,an_2,packet_number_1,msg_2,icv2))
+    ) | (
+        in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+        let sci_A_4: bitstring = sci_A_7 in
+        get association_keys(=sci_1,=an_3,ska_A_1: key) in
+        (
+            get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+                0
+            else
+                if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+                insert freshness(sci_A_4,an_3,packet_number_2);
+                let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                event message_received_Bob(received_msg_1,packet_number_2)
+        )
+        else
+            let szk_4: key = szk_7 in
+            let n_key_1: key = kdf(szk_4,20) in
+            if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let kek_2: key = kdf(szk_4,10) in
+            let sak_2: key = key_dec(x_1,kek_2) in
+            insert association_keys(sci_A_4,an_3,sak_2)
+    ) | (
+        phase 2;
+        new sak_3: key;
+        insert association_keys(sci_A_7,1,sak_3);
+        (
+            let an_4: nat = 1 in
+            let sci_A_5: bitstring = sci_A_7 in
+            get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+            let packet_number_3: nat = 2 in
+            let m_1: bitstring = msg_4 in
+            event message_send_Alice(m_1,packet_number_3);
+            let msg_3: bitstring = enc(m_1,sak_alice_1) in
+            let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+            out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+        ) | (
+            in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+            let sci_A_6: bitstring = sci_A_7 in
+            get association_keys(=sci_2,=an_5,ska_A_2: key) in
+            (
+                get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                    0
+                else
+                    if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                    insert freshness(sci_A_6,an_5,packet_number_4);
+                    let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                    event message_received_Bob(received_msg_2,packet_number_4)
+            )
+            else
+                let szk_6: key = szk_7 in
+                let n_key_2: key = kdf(szk_6,20) in
+                if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let kek_3: key = kdf(szk_6,10) in
+                let sak_4: key = key_dec(x_2,kek_3) in
+                insert association_keys(sci_A_6,an_5,sak_4)
+        )
+    )
+
+--------------------------------------------------------------
+1st process: Reduction |
+
+1st process: Reduction |
+
+2nd process: Beginning of process Bob
+
+1st process: Beginning of process Alice
+
+1st process: let an_2: nat = 1 succeeds
+
+1st process: let sci_A_3: bitstring = sci_A_7 succeeds
+
+New processes:
+(
+    get association_keys(=sci_A_7,=1,sak_alice: key) in
+    let packet_number_1: nat = 2 in
+    let m: bitstring = msg_4 in
+    event message_send_Alice(m,packet_number_1);
+    let msg_2: bitstring = enc(m,sak_alice) in
+    let icv2: bitstring = hmac(msg_2,1,packet_number_1,sak_alice) in
+    out(scA, (sci_A_7,1,packet_number_1,msg_2,icv2))
+) | (
+    in(scA, (sci_1: bitstring,an_3: nat,packet_number_2: nat,x_1: bitstring,icv_2: bitstring));
+    let sci_A_4: bitstring = sci_A_7 in
+    get association_keys(=sci_1,=an_3,ska_A_1: key) in
+    (
+        get freshness(=sci_1,=an_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_2) in
+            0
+        else
+            if ((sci_1 = sci_A_4) && (icv_2 = hmac(x_1,an_3,packet_number_2,ska_A_1))) then
+            insert freshness(sci_A_4,an_3,packet_number_2);
+            let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+            event message_received_Bob(received_msg_1,packet_number_2)
+    )
+    else
+        let szk_4: key = szk_7 in
+        let n_key_1: key = kdf(szk_4,20) in
+        if ((sci_1 = sci_A_4) && ((packet_number_2 = 1) && (icv_2 = hmac(x_1,an_3,packet_number_2,n_key_1)))) then
+        insert freshness(sci_A_4,an_3,packet_number_2);
+        let kek_2: key = kdf(szk_4,10) in
+        let sak_2: key = key_dec(x_1,kek_2) in
+        insert association_keys(sci_A_4,an_3,sak_2)
+) | (
+    phase 2;
+    new sak_3: key;
+    insert association_keys(sci_A_7,1,sak_3);
+    (
+        let an_4: nat = 1 in
+        let sci_A_5: bitstring = sci_A_7 in
+        get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+        let packet_number_3: nat = 2 in
+        let m_1: bitstring = msg_4 in
+        event message_send_Alice(m_1,packet_number_3);
+        let msg_3: bitstring = enc(m_1,sak_alice_1) in
+        let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+        out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+    ) | (
+        in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+        let sci_A_6: bitstring = sci_A_7 in
+        get association_keys(=sci_2,=an_5,ska_A_2: key) in
+        (
+            get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                0
+            else
+                if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                event message_received_Bob(received_msg_2,packet_number_4)
+        )
+        else
+            let szk_6: key = szk_7 in
+            let n_key_2: key = kdf(szk_6,20) in
+            if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+            insert freshness(sci_A_6,an_5,packet_number_4);
+            let kek_3: key = kdf(szk_6,10) in
+            let sak_4: key = key_dec(x_2,kek_3) in
+            insert association_keys(sci_A_6,an_5,sak_4)
+    )
+)
+
+--------------------------------------------------------------
+Switching to phase 2
+
+Additional knowledge of the attacker:
+a_2
+a_1
+--------------------------------------------------------------
+New processes:
+    new sak_3: key;
+    insert association_keys(sci_A_7,1,sak_3);
+    (
+        let an_4: nat = 1 in
+        let sci_A_5: bitstring = sci_A_7 in
+        get association_keys(=sci_A_5,=an_4,sak_alice_1: key) in
+        let packet_number_3: nat = 2 in
+        let m_1: bitstring = msg_4 in
+        event message_send_Alice(m_1,packet_number_3);
+        let msg_3: bitstring = enc(m_1,sak_alice_1) in
+        let icv2_1: bitstring = hmac(msg_3,an_4,packet_number_3,sak_alice_1) in
+        out(scA, (sci_A_5,an_4,packet_number_3,msg_3,icv2_1))
+    ) | (
+        in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+        let sci_A_6: bitstring = sci_A_7 in
+        get association_keys(=sci_2,=an_5,ska_A_2: key) in
+        (
+            get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+                0
+            else
+                if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+                insert freshness(sci_A_6,an_5,packet_number_4);
+                let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+                event message_received_Bob(received_msg_2,packet_number_4)
+        )
+        else
+            let szk_6: key = szk_7 in
+            let n_key_2: key = kdf(szk_6,20) in
+            if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+            insert freshness(sci_A_6,an_5,packet_number_4);
+            let kek_3: key = kdf(szk_6,10) in
+            let sak_4: key = key_dec(x_2,kek_3) in
+            insert association_keys(sci_A_6,an_5,sak_4)
+    )
+
+--------------------------------------------------------------
+1st process: new sak_3: key creating sak_6
+
+1st process: insert association_keys(sci_A_7,1,sak_6) done
+
+1st process: Reduction |
+
+2nd process: Beginning of process Bob
+
+1st process: Beginning of process Alice
+
+1st process: let an_4: nat = 1 succeeds
+
+1st process: let sci_A_5: bitstring = sci_A_7 succeeds
+
+New processes:
+(
+    get association_keys(=sci_A_7,=1,sak_alice_1: key) in
+    let packet_number_3: nat = 2 in
+    let m_1: bitstring = msg_4 in
+    event message_send_Alice(m_1,packet_number_3);
+    let msg_3: bitstring = enc(m_1,sak_alice_1) in
+    let icv2_1: bitstring = hmac(msg_3,1,packet_number_3,sak_alice_1) in
+    out(scA, (sci_A_7,1,packet_number_3,msg_3,icv2_1))
+) | (
+    in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring));
+    let sci_A_6: bitstring = sci_A_7 in
+    get association_keys(=sci_2,=an_5,ska_A_2: key) in
+    (
+        get freshness(=sci_2,=an_5,fv_2: nat) suchthat (fv_2 ≥ packet_number_4) in
+            0
+        else
+            if ((sci_2 = sci_A_6) && (icv_3 = hmac(x_2,an_5,packet_number_4,ska_A_2))) then
+            insert freshness(sci_A_6,an_5,packet_number_4);
+            let received_msg_2: bitstring = dec(x_2,ska_A_2) in
+            event message_received_Bob(received_msg_2,packet_number_4)
+    )
+    else
+        let szk_6: key = szk_7 in
+        let n_key_2: key = kdf(szk_6,20) in
+        if ((sci_2 = sci_A_6) && ((packet_number_4 = 1) && (icv_3 = hmac(x_2,an_5,packet_number_4,n_key_2)))) then
+        insert freshness(sci_A_6,an_5,packet_number_4);
+        let kek_3: key = kdf(szk_6,10) in
+        let sak_4: key = key_dec(x_2,kek_3) in
+        insert association_keys(sci_A_6,an_5,sak_4)
+)
+
+--------------------------------------------------------------
+2nd process: in(scA, (sci_2: bitstring,an_5: nat,packet_number_4: nat,x_2: bitstring,icv_3: bitstring)) done with message (~M_1,a_2,a_1,enc(a_3,a),hmac(enc(a_3,a),a_2,a_1,a)) = (sci_A_7,a_2,a_1,enc(a_3,a),hmac(enc(a_3,a),a_2,a_1,a))
+
+2nd process: let sci_A_6: bitstring = sci_A_7 succeeds
+
+2nd process: get association_keys(=sci_A_7,=a_2,ska_A_2: key) done with entry association_keys(sci_A_7,a_2,a)
+
+2nd process: get freshness(=sci_A_7,=a_2,fv_2: nat) suchthat (fv_2 ≥ a_1): else branch taken
+
+2nd process: if ((sci_A_7 = sci_A_7) && (hmac(enc(a_3,a),a_2,a_1,a) = hmac(enc(a_3,a),a_2,a_1,a))) succeeds
+
+2nd process: insert freshness(sci_A_7,a_2,a_1) done
+
+2nd process: let received_msg_2: bitstring = dec(enc(a_3,a),a) succeeds
+
+2nd process: event message_received_Bob(dec(enc(a_3,a),a),a_1) executed; it is a goal
+
+New processes:
+(
+    get association_keys(=sci_A_7,=1,sak_alice_1: key) in
+    let packet_number_3: nat = 2 in
+    let m_1: bitstring = msg_4 in
+    event message_send_Alice(m_1,packet_number_3);
+    let msg_3: bitstring = enc(m_1,sak_alice_1) in
+    let icv2_1: bitstring = hmac(msg_3,1,packet_number_3,sak_alice_1) in
+    out(scA, (sci_A_7,1,packet_number_3,msg_3,icv2_1))
+) | (
+    0
+)
+
+--------------------------------------------------------------
+The event message_received_Bob(a_3,a_1) is executed at {77}.
+A trace has been found.
+RESULT inj-event(message_received_Bob(m_2,packet_number_5)) ==> inj-event(message_send_Alice(m_2,packet_number_5)) is false.
+RESULT (even event(message_received_Bob(m_2,packet_number_5)) ==> event(message_send_Alice(m_2,packet_number_5)) is false.)
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not (event(message_received_Bob(m_2,packet_number_5)) && attacker_p2(m_2)) cannot be proved.
+
+Query inj-event(message_received_Bob(m_2,packet_number_5)) ==> inj-event(message_send_Alice(m_2,packet_number_5)) is false.
+
+--------------------------------------------------------------
+

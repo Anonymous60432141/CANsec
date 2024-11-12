@@ -34,9 +34,9 @@ let Bob() =
     in(scA, (sci: bitstring, an: nat, fresh: nat, x: bitstring, icv: bitstring));
     get association_keys(=sci, =an, sak) in
         if icv = hmac(sci, x, fresh, an, sak) then (
-            get freshness(=sci, fv) suchthat fv>=fresh in 0 else(
-                insert freshness(sci, fresh); 
-                let received_msg = dec(x, sak) in
+            get freshness(=sci, fv) suchthat fv >= fresh in 0 else( 
+                insert freshness(sci, fresh);
+                let received_msg = dec(x, sak) in 
                 event message_received_B(received_msg, fresh)
             )
         ) else 0.
@@ -53,8 +53,8 @@ query m: bitstring, fresh: nat;
 (* Main Process *)
 process
     new k_A: key;
-    new sci_A: bitstring;
+    !(new sci_A: bitstring;
     new msg: bitstring;
     insert association_keys(sci_A, 0, k_A);
     insert freshness(sci_A, 0);
-    (!Alice(msg, sci_A, 1, 0) | !Bob())
+    (Alice(msg, sci_A, 1, 0) | Bob()))

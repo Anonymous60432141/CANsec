@@ -55,7 +55,7 @@ process
     new k_A: key;
     new sci_A: bitstring;
     new msg: bitstring;
-    out(scA, k_A);
+
     insert association_keys(sci_A, 0, k_A);
     insert freshness(sci_A, 0);
     (!Alice(msg, sci_A, 1, 0) | !Bob())

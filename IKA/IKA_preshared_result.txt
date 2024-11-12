@@ -1,0 +1,571 @@
+Linear part: No equation.
+Convergent part:
+dec(enc(m,k),k) = m
+enc(dec(m,k),k) = m
+Completing equations...
+Completed equations:
+enc(dec(m,k),k) = m
+dec(enc(m,k),k) = m
+Process 0 (that is, the initial process):
+{1}new szk: key;
+{2}out(scA, szk);
+{3}new sci_A: bitstring;
+{4}new msg: bitstring;
+{5}let kc: nat = 1 in
+{6}insert freshness(sci_A,0,0);
+{7}insert key_counter(sci_A,0,szk);
+(
+    {8}let m: bitstring = msg in
+    {9}let sci_A_1: bitstring = sci_A in
+    {10}let szk_1: key = szk in
+    {11}let sak_alice: key = kdf(szk_1,kc) in
+    {12}new random_msg: bitstring;
+    {13}let packet_number: nat = 1 in
+    {14}let icv: bitstring = hmac(random_msg,kc,packet_number,sak_alice) in
+    {15}out(scA, (sci_A_1,kc,1,enc(random_msg,sak_alice),icv));
+    {16}let msg_1: bitstring = enc(m,sak_alice) in
+    {17}let icv2: bitstring = hmac(msg_1,kc,packet_number + 1,sak_alice) in
+    {18}event message_send_Alice(m,packet_number + 1);
+    {19}out(scA, (sci_A_1,kc,packet_number + 1,msg_1,icv2))
+) | (
+    {20}let sci_A_2: bitstring = sci_A in
+    {21}let szk_2: key = szk in
+    {22}in(scA, (sci: bitstring,kc_1: nat,packet_number_1: nat,x: bitstring,icv_1: bitstring));
+    {34}get key_counter(=sci,=kc_1,ska_A: key) in
+    (
+        {28}get revoke_keys(=ska_A,secure_channel: bitstring) suchthat (secure_channel = sci) in
+            0
+        else
+            {27}get freshness(=sci,=kc_1,fv: nat) suchthat (fv ≥ packet_number_1) in
+                0
+            else
+                {23}if ((sci = sci_A_2) && (icv_1 = hmac(x,kc_1,packet_number_1,ska_A))) then
+                {24}let received_msg: bitstring = dec(x,ska_A) in
+                {25}insert freshness(sci_A_2,kc_1,packet_number_1);
+                {26}event message_received_Bob(received_msg,packet_number_1)
+    )
+    else
+        {29}let n_key: key = kdf(szk_2,kc_1) in
+        {30}if ((sci = sci_A_2) && ((packet_number_1 = 1) && (icv_1 = hmac(x,kc_1,packet_number_1,n_key)))) then
+        {33}get revoke_keys(=n_key,sc: bitstring) suchthat (sc = sci) in
+            0
+        else
+            {31}insert freshness(sci_A_2,kc_1,packet_number_1);
+            {32}insert key_counter(sci_A_2,kc_1,n_key)
+) | (
+    {35}phase 1;
+    {36}insert revoke_keys(kdf(szk,kc),sci_A);
+    (
+        {37}let m_1: bitstring = msg in
+        {38}let sci_A_3: bitstring = sci_A in
+        {39}let szk_3: key = szk in
+        {40}let kc_2: nat = kc + 1 in
+        {41}let sak_alice_1: key = kdf(szk_3,kc_2) in
+        {42}new random_msg_1: bitstring;
+        {43}let packet_number_2: nat = 1 in
+        {44}let icv_2: bitstring = hmac(random_msg_1,kc_2,packet_number_2,sak_alice_1) in
+        {45}out(scA, (sci_A_3,kc_2,1,enc(random_msg_1,sak_alice_1),icv_2));
+        {46}let msg_2: bitstring = enc(m_1,sak_alice_1) in
+        {47}let icv2_1: bitstring = hmac(msg_2,kc_2,packet_number_2 + 1,sak_alice_1) in
+        {48}event message_send_Alice(m_1,packet_number_2 + 1);
+        {49}out(scA, (sci_A_3,kc_2,packet_number_2 + 1,msg_2,icv2_1))
+    ) | (
+        {50}let sci_A_4: bitstring = sci_A in
+        {51}let szk_4: key = szk in
+        {52}in(scA, (sci_1: bitstring,kc_3: nat,packet_number_3: nat,x_1: bitstring,icv_3: bitstring));
+        {64}get key_counter(=sci_1,=kc_3,ska_A_1: key) in
+        (
+            {58}get revoke_keys(=ska_A_1,secure_channel_1: bitstring) suchthat (secure_channel_1 = sci_1) in
+                0
+            else
+                {57}get freshness(=sci_1,=kc_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_3) in
+                    0
+                else
+                    {53}if ((sci_1 = sci_A_4) && (icv_3 = hmac(x_1,kc_3,packet_number_3,ska_A_1))) then
+                    {54}let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                    {55}insert freshness(sci_A_4,kc_3,packet_number_3);
+                    {56}event message_received_Bob(received_msg_1,packet_number_3)
+        )
+        else
+            {59}let n_key_1: key = kdf(szk_4,kc_3) in
+            {60}if ((sci_1 = sci_A_4) && ((packet_number_3 = 1) && (icv_3 = hmac(x_1,kc_3,packet_number_3,n_key_1)))) then
+            {63}get revoke_keys(=n_key_1,sc_1: bitstring) suchthat (sc_1 = sci_1) in
+                0
+            else
+                {61}insert freshness(sci_A_4,kc_3,packet_number_3);
+                {62}insert key_counter(sci_A_4,kc_3,n_key_1)
+    )
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+{1}new szk: key;
+{2}out(scA, szk);
+{3}new sci_A: bitstring;
+{4}new msg: bitstring;
+{6}insert freshness(sci_A,0,0);
+{7}insert key_counter(sci_A,0,szk);
+{5}let kc: nat = 1 in
+(
+    {12}new random_msg: bitstring;
+    {13}let packet_number: nat = 1 in
+    {10}let szk_1: key = szk in
+    {11}let sak_alice: key = kdf(szk_1,kc) in
+    {14}let icv: bitstring = hmac(random_msg,kc,packet_number,sak_alice) in
+    {9}let sci_A_1: bitstring = sci_A in
+    {15}out(scA, (sci_A_1,kc,1,enc(random_msg,sak_alice),icv));
+    {8}let m: bitstring = msg in
+    {18}event message_send_Alice(m,packet_number + 1);
+    {16}let msg_1: bitstring = enc(m,sak_alice) in
+    {17}let icv2: bitstring = hmac(msg_1,kc,packet_number + 1,sak_alice) in
+    {19}out(scA, (sci_A_1,kc,packet_number + 1,msg_1,icv2))
+) | (
+    {22}in(scA, (sci: bitstring,kc_1: nat,packet_number_1: nat,x: bitstring,icv_1: bitstring));
+    {20}let sci_A_2: bitstring = sci_A in
+    {34}get key_counter(=sci,=kc_1,ska_A: key) in
+    (
+        {28}get revoke_keys(=ska_A,secure_channel: bitstring) suchthat (secure_channel = sci) in
+            0
+        else
+            {27}get freshness(=sci,=kc_1,fv: nat) suchthat (fv ≥ packet_number_1) in
+                0
+            else
+                {23}if ((sci = sci_A_2) && (icv_1 = hmac(x,kc_1,packet_number_1,ska_A))) then
+                {25}insert freshness(sci_A_2,kc_1,packet_number_1);
+                {24}let received_msg: bitstring = dec(x,ska_A) in
+                {26}event message_received_Bob(received_msg,packet_number_1)
+    )
+    else
+        {21}let szk_2: key = szk in
+        {29}let n_key: key = kdf(szk_2,kc_1) in
+        {30}if ((sci = sci_A_2) && ((packet_number_1 = 1) && (icv_1 = hmac(x,kc_1,packet_number_1,n_key)))) then
+        {33}get revoke_keys(=n_key,sc: bitstring) suchthat (sc = sci) in
+            0
+        else
+            {31}insert freshness(sci_A_2,kc_1,packet_number_1);
+            {32}insert key_counter(sci_A_2,kc_1,n_key)
+) | (
+    {35}phase 1;
+    {36}insert revoke_keys(kdf(szk,kc),sci_A);
+    (
+        {42}new random_msg_1: bitstring;
+        {43}let packet_number_2: nat = 1 in
+        {40}let kc_2: nat = kc + 1 in
+        {39}let szk_3: key = szk in
+        {41}let sak_alice_1: key = kdf(szk_3,kc_2) in
+        {44}let icv_2: bitstring = hmac(random_msg_1,kc_2,packet_number_2,sak_alice_1) in
+        {38}let sci_A_3: bitstring = sci_A in
+        {45}out(scA, (sci_A_3,kc_2,1,enc(random_msg_1,sak_alice_1),icv_2));
+        {37}let m_1: bitstring = msg in
+        {48}event message_send_Alice(m_1,packet_number_2 + 1);
+        {46}let msg_2: bitstring = enc(m_1,sak_alice_1) in
+        {47}let icv2_1: bitstring = hmac(msg_2,kc_2,packet_number_2 + 1,sak_alice_1) in
+        {49}out(scA, (sci_A_3,kc_2,packet_number_2 + 1,msg_2,icv2_1))
+    ) | (
+        {52}in(scA, (sci_1: bitstring,kc_3: nat,packet_number_3: nat,x_1: bitstring,icv_3: bitstring));
+        {50}let sci_A_4: bitstring = sci_A in
+        {64}get key_counter(=sci_1,=kc_3,ska_A_1: key) in
+        (
+            {58}get revoke_keys(=ska_A_1,secure_channel_1: bitstring) suchthat (secure_channel_1 = sci_1) in
+                0
+            else
+                {57}get freshness(=sci_1,=kc_3,fv_1: nat) suchthat (fv_1 ≥ packet_number_3) in
+                    0
+                else
+                    {53}if ((sci_1 = sci_A_4) && (icv_3 = hmac(x_1,kc_3,packet_number_3,ska_A_1))) then
+                    {55}insert freshness(sci_A_4,kc_3,packet_number_3);
+                    {54}let received_msg_1: bitstring = dec(x_1,ska_A_1) in
+                    {56}event message_received_Bob(received_msg_1,packet_number_3)
+        )
+        else
+            {51}let szk_4: key = szk in
+            {59}let n_key_1: key = kdf(szk_4,kc_3) in
+            {60}if ((sci_1 = sci_A_4) && ((packet_number_3 = 1) && (icv_3 = hmac(x_1,kc_3,packet_number_3,n_key_1)))) then
+            {63}get revoke_keys(=n_key_1,sc_1: bitstring) suchthat (sc_1 = sci_1) in
+                0
+            else
+                {61}insert freshness(sci_A_4,kc_3,packet_number_3);
+                {62}insert key_counter(sci_A_4,kc_3,n_key_1)
+    )
+)
+
+-- Query not (event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 108 rules (55 with conclusion selected). Queue: 26 rules.
+Starting query not (event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2))
+goal reachable: attacker(m_2) && attacker(packet_number_4) && attacker_p1(m_2) -> event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2)
+
+Derivation:
+
+1. We assume as hypothesis that
+attacker_p1(m_2).
+
+2. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+3. We assume as hypothesis that
+attacker(packet_number_4).
+
+4. Using the function 0 the attacker may obtain 0.
+attacker(0).
+
+5. We assume as hypothesis that
+attacker(m_2).
+
+6. By 5, the attacker may know m_2.
+By 2, the attacker may know szk[].
+Using the function enc the attacker may obtain enc(m_2,szk[]).
+attacker(enc(m_2,szk[])).
+
+7. By 6, the attacker may know enc(m_2,szk[]).
+By 4, the attacker may know 0.
+By 3, the attacker may know packet_number_4.
+By 2, the attacker may know szk[].
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_4,szk[]).
+attacker(hmac(enc(m_2,szk[]),0,packet_number_4,szk[])).
+
+8. The message (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))) may be sent to the attacker at output {15}.
+attacker((sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1)))).
+
+9. By 8, the attacker may know (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+10. By 9, the attacker may know sci_A[].
+By 4, the attacker may know 0.
+By 3, the attacker may know packet_number_4.
+By 6, the attacker may know enc(m_2,szk[]).
+By 7, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_4,szk[]).
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])).
+attacker((sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[]))).
+
+11. The entry key_counter(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(key_counter(sci_A[],0,szk[])).
+
+12. The message (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) that the attacker may have by 10 may be received at input {22}.
+The entry key_counter(sci_A[],0,szk[]) that may be in a table by 11 may be read at get {34}.
+So event message_received_Bob(m_2,packet_number_4) may be executed at {26}.
+event(message_received_Bob(m_2,packet_number_4)).
+
+13. By 12, event(message_received_Bob(m_2,packet_number_4)).
+By 1, attacker_p1(m_2).
+The goals are reached, combined in the following fact:
+event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2).
+
+
+A more detailed output of the traces is available with
+  set traceDisplay = long.
+
+new szk: key creating szk_5 at {1}
+
+out(scA, ~M) with ~M = szk_5 at {2}
+
+new sci_A: bitstring creating sci_A_5 at {3}
+
+new msg: bitstring creating msg_3 at {4}
+
+insert freshness(sci_A_5,0,0) at {6}
+
+insert key_counter(sci_A_5,0,szk_5) at {7}
+
+new random_msg: bitstring creating random_msg_2 at {12}
+
+out(scA, (~M_1,1,1,~M_2,~M_3)) with ~M_1 = sci_A_5, ~M_2 = enc(random_msg_2,kdf(szk_5,1)), ~M_3 = hmac(random_msg_2,1,1,kdf(szk_5,1)) at {15}
+
+event message_send_Alice(msg_3,2) at {18}
+
+out(scA, (~M_4,1,2,~M_5,~M_6)) with ~M_4 = sci_A_5, ~M_5 = enc(msg_3,kdf(szk_5,1)), ~M_6 = hmac(enc(msg_3,kdf(szk_5,1)),1,2,kdf(szk_5,1)) at {19}
+
+in(scA, (~M_1,0,a,enc(a_1,~M),hmac(enc(a_1,~M),0,a,~M))) with ~M_1 = sci_A_5, enc(a_1,~M) = enc(a_1,szk_5), hmac(enc(a_1,~M),0,a,~M) = hmac(enc(a_1,szk_5),0,a,szk_5) at {22}
+
+get key_counter(sci_A_5,0,szk_5) at {34}
+
+get revoke_keys(=szk_5,secure_channel: bitstring) suchthat (secure_channel = sci_A_5): else branch taken at {28}
+
+get freshness(=sci_A_5,=0,fv: nat) suchthat (fv ≥ a): else branch taken at {27}
+
+insert freshness(sci_A_5,0,a) at {25}
+
+event message_received_Bob(dec(enc(a_1,szk_5),szk_5),a) at {26} (goal)
+
+The event message_received_Bob(a_1,a) is executed at {26}.
+The attacker has the message a_1 in phase 1.
+A trace has been found, assuming the following hypothesis:
+attacker_p1(a_1[])
+goal reachable: attacker_p1(packet_number_4) && attacker_p1(m_2) -> event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2)
+
+Derivation:
+
+1. We assume as hypothesis that
+attacker_p1(m_2).
+
+2. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+3. By 2, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+4. We assume as hypothesis that
+attacker_p1(packet_number_4).
+
+5. Using the function 0 the attacker may obtain 0 in phase 1.
+attacker_p1(0).
+
+6. By 1, the attacker may know m_2 in phase 1.
+By 3, the attacker may know szk[] in phase 1.
+Using the function enc the attacker may obtain enc(m_2,szk[]) in phase 1.
+attacker_p1(enc(m_2,szk[])).
+
+7. By 6, the attacker may know enc(m_2,szk[]) in phase 1.
+By 5, the attacker may know 0 in phase 1.
+By 4, the attacker may know packet_number_4 in phase 1.
+By 3, the attacker may know szk[] in phase 1.
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_4,szk[]) in phase 1.
+attacker_p1(hmac(enc(m_2,szk[]),0,packet_number_4,szk[])).
+
+8. The message (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))) may be sent to the attacker at output {15}.
+attacker((sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1)))).
+
+9. By 8, the attacker may know (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+10. By 9, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+11. By 10, the attacker may know sci_A[] in phase 1.
+By 5, the attacker may know 0 in phase 1.
+By 4, the attacker may know packet_number_4 in phase 1.
+By 6, the attacker may know enc(m_2,szk[]) in phase 1.
+By 7, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_4,szk[]) in phase 1.
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) in phase 1.
+attacker_p1((sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[]))).
+
+12. The entry key_counter(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(key_counter(sci_A[],0,szk[])).
+
+13. By 12, a table may contain the entry key_counter(sci_A[],0,szk[]).
+So a table may contain the entry key_counter(sci_A[],0,szk[]) in phase 1.
+table_p1(key_counter(sci_A[],0,szk[])).
+
+14. The message (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) that the attacker may have in phase 1 by 11 may be received at input {52}.
+The entry key_counter(sci_A[],0,szk[]) that may be in a table in phase 1 by 13 may be read at get {64}.
+So event message_received_Bob(m_2,packet_number_4) may be executed at {56}.
+event(message_received_Bob(m_2,packet_number_4)).
+
+15. By 14, event(message_received_Bob(m_2,packet_number_4)).
+By 1, attacker_p1(m_2).
+The goals are reached, combined in the following fact:
+event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2).
+
+
+Could not find a trace corresponding to this derivation.
+RESULT not (event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2)) cannot be proved.
+-- Query inj-event(message_received_Bob(m_2,packet_number_4)) ==> inj-event(message_send_Alice(m_2,packet_number_4)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 105 rules (55 with conclusion selected). Queue: 25 rules.
+400 rules inserted. Base: 127 rules (76 with conclusion selected). Queue: 6 rules.
+Starting query inj-event(message_received_Bob(m_2,packet_number_4)) ==> inj-event(message_send_Alice(m_2,packet_number_4))
+goal reachable: attacker_p1(m_2) && attacker_p1(packet_number_4) -> inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1)
+Abbreviations:
+@occ56_1 = @occ56[ska_A_1 = szk[],icv_3 = hmac(enc(m_2,szk[]),0,packet_number_4,szk[]),x_1 = enc(m_2,szk[]),packet_number_3 = packet_number_4,kc_3 = 0,sci_1 = sci_A[]]
+
+Derivation:
+Abbreviations:
+@occ56_1 = @occ56[ska_A_1 = szk[],icv_3 = hmac(enc(m_2,szk[]),0,packet_number_4,szk[]),x_1 = enc(m_2,szk[]),packet_number_3 = packet_number_4,kc_3 = 0,sci_1 = sci_A[]]
+
+1. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+2. By 1, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+3. We assume as hypothesis that
+attacker_p1(packet_number_4).
+
+4. Using the function 0 the attacker may obtain 0 in phase 1.
+attacker_p1(0).
+
+5. We assume as hypothesis that
+attacker_p1(m_2).
+
+6. By 5, the attacker may know m_2 in phase 1.
+By 2, the attacker may know szk[] in phase 1.
+Using the function enc the attacker may obtain enc(m_2,szk[]) in phase 1.
+attacker_p1(enc(m_2,szk[])).
+
+7. By 6, the attacker may know enc(m_2,szk[]) in phase 1.
+By 4, the attacker may know 0 in phase 1.
+By 3, the attacker may know packet_number_4 in phase 1.
+By 2, the attacker may know szk[] in phase 1.
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_4,szk[]) in phase 1.
+attacker_p1(hmac(enc(m_2,szk[]),0,packet_number_4,szk[])).
+
+8. The message (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))) may be sent to the attacker at output {15}.
+attacker((sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1)))).
+
+9. By 8, the attacker may know (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+10. By 9, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+11. By 10, the attacker may know sci_A[] in phase 1.
+By 4, the attacker may know 0 in phase 1.
+By 3, the attacker may know packet_number_4 in phase 1.
+By 6, the attacker may know enc(m_2,szk[]) in phase 1.
+By 7, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_4,szk[]) in phase 1.
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) in phase 1.
+attacker_p1((sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[]))).
+
+12. The entry key_counter(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(key_counter(sci_A[],0,szk[])).
+
+13. By 12, a table may contain the entry key_counter(sci_A[],0,szk[]).
+So a table may contain the entry key_counter(sci_A[],0,szk[]) in phase 1.
+table_p1(key_counter(sci_A[],0,szk[])).
+
+14. The message (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) that the attacker may have in phase 1 by 11 may be received at input {52}.
+The entry key_counter(sci_A[],0,szk[]) that may be in a table in phase 1 by 13 may be read at get {64}.
+So event message_received_Bob(m_2,packet_number_4) may be executed at {56}.
+inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1).
+
+15. By 14, inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1).
+The goal is reached, represented in the following fact:
+inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1).
+
+
+Could not find a trace corresponding to this derivation.
+goal reachable: attacker(m_2) && attacker_p1(packet_number_4) -> inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1)
+Abbreviations:
+@occ56_1 = @occ56[ska_A_1 = szk[],icv_3 = hmac(enc(m_2,szk[]),0,packet_number_4,szk[]),x_1 = enc(m_2,szk[]),packet_number_3 = packet_number_4,kc_3 = 0,sci_1 = sci_A[]]
+
+Derivation:
+Abbreviations:
+@occ56_1 = @occ56[ska_A_1 = szk[],icv_3 = hmac(enc(m_2,szk[]),0,packet_number_4,szk[]),x_1 = enc(m_2,szk[]),packet_number_3 = packet_number_4,kc_3 = 0,sci_1 = sci_A[]]
+
+1. The message szk[] may be sent to the attacker at output {2}.
+attacker(szk[]).
+
+2. By 1, the attacker may know szk[].
+So the attacker may know szk[] in phase 1.
+attacker_p1(szk[]).
+
+3. We assume as hypothesis that
+attacker_p1(packet_number_4).
+
+4. Using the function 0 the attacker may obtain 0 in phase 1.
+attacker_p1(0).
+
+5. We assume as hypothesis that
+attacker(m_2).
+
+6. By 5, the attacker may know m_2.
+By 1, the attacker may know szk[].
+Using the function enc the attacker may obtain enc(m_2,szk[]).
+attacker(enc(m_2,szk[])).
+
+7. By 6, the attacker may know enc(m_2,szk[]).
+So the attacker may know enc(m_2,szk[]) in phase 1.
+attacker_p1(enc(m_2,szk[])).
+
+8. By 7, the attacker may know enc(m_2,szk[]) in phase 1.
+By 4, the attacker may know 0 in phase 1.
+By 3, the attacker may know packet_number_4 in phase 1.
+By 2, the attacker may know szk[] in phase 1.
+Using the function hmac the attacker may obtain hmac(enc(m_2,szk[]),0,packet_number_4,szk[]) in phase 1.
+attacker_p1(hmac(enc(m_2,szk[]),0,packet_number_4,szk[])).
+
+9. The message (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))) may be sent to the attacker at output {15}.
+attacker((sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1)))).
+
+10. By 9, the attacker may know (sci_A[],1,1,enc(random_msg[],kdf(szk[],1)),hmac(random_msg[],1,1,kdf(szk[],1))).
+Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
+attacker(sci_A[]).
+
+11. By 10, the attacker may know sci_A[].
+So the attacker may know sci_A[] in phase 1.
+attacker_p1(sci_A[]).
+
+12. By 11, the attacker may know sci_A[] in phase 1.
+By 4, the attacker may know 0 in phase 1.
+By 3, the attacker may know packet_number_4 in phase 1.
+By 7, the attacker may know enc(m_2,szk[]) in phase 1.
+By 8, the attacker may know hmac(enc(m_2,szk[]),0,packet_number_4,szk[]) in phase 1.
+Using the function 5-tuple the attacker may obtain (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) in phase 1.
+attacker_p1((sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[]))).
+
+13. The entry key_counter(sci_A[],0,szk[]) may be inserted in a table at insert {7}.
+table(key_counter(sci_A[],0,szk[])).
+
+14. By 13, a table may contain the entry key_counter(sci_A[],0,szk[]).
+So a table may contain the entry key_counter(sci_A[],0,szk[]) in phase 1.
+table_p1(key_counter(sci_A[],0,szk[])).
+
+15. The message (sci_A[],0,packet_number_4,enc(m_2,szk[]),hmac(enc(m_2,szk[]),0,packet_number_4,szk[])) that the attacker may have in phase 1 by 12 may be received at input {52}.
+The entry key_counter(sci_A[],0,szk[]) that may be in a table in phase 1 by 14 may be read at get {64}.
+So event message_received_Bob(m_2,packet_number_4) may be executed at {56}.
+inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1).
+
+16. By 15, inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1).
+The goal is reached, represented in the following fact:
+inj-event(message_received_Bob(m_2,packet_number_4),@occ56_1).
+
+
+A more detailed output of the traces is available with
+  set traceDisplay = long.
+
+new szk: key creating szk_5 at {1}
+
+out(scA, ~M) with ~M = szk_5 at {2}
+
+new sci_A: bitstring creating sci_A_5 at {3}
+
+new msg: bitstring creating msg_3 at {4}
+
+insert freshness(sci_A_5,0,0) at {6}
+
+insert key_counter(sci_A_5,0,szk_5) at {7}
+
+new random_msg: bitstring creating random_msg_2 at {12}
+
+out(scA, (~M_1,1,1,~M_2,~M_3)) with ~M_1 = sci_A_5, ~M_2 = enc(random_msg_2,kdf(szk_5,1)), ~M_3 = hmac(random_msg_2,1,1,kdf(szk_5,1)) at {15}
+
+insert revoke_keys(kdf(szk_5,1),sci_A_5) at {36}
+
+new random_msg_1: bitstring creating random_msg_3 at {42}
+
+out(scA, (~M_4,2,1,~M_5,~M_6)) with ~M_4 = sci_A_5, ~M_5 = enc(random_msg_3,kdf(szk_5,2)), ~M_6 = hmac(random_msg_3,2,1,kdf(szk_5,2)) at {45}
+
+in(scA, (~M_1,0,a,enc(a_1,~M),hmac(enc(a_1,~M),0,a,~M))) with ~M_1 = sci_A_5, enc(a_1,~M) = enc(a_1,szk_5), hmac(enc(a_1,~M),0,a,~M) = hmac(enc(a_1,szk_5),0,a,szk_5) at {52}
+
+get key_counter(sci_A_5,0,szk_5) at {64}
+
+get revoke_keys(=szk_5,secure_channel_1: bitstring) suchthat (secure_channel_1 = sci_A_5): else branch taken at {58}
+
+get freshness(=sci_A_5,=0,fv_1: nat) suchthat (fv_1 ≥ a): else branch taken at {57}
+
+insert freshness(sci_A_5,0,a) at {55}
+
+event message_received_Bob(dec(enc(a_1,szk_5),szk_5),a) at {56} (goal)
+
+The event message_received_Bob(a_1,a) is executed at {56}.
+A trace has been found.
+RESULT inj-event(message_received_Bob(m_2,packet_number_4)) ==> inj-event(message_send_Alice(m_2,packet_number_4)) is false.
+RESULT (even event(message_received_Bob(m_2,packet_number_4)) ==> event(message_send_Alice(m_2,packet_number_4)) is false.)
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not (event(message_received_Bob(m_2,packet_number_4)) && attacker_p1(m_2)) cannot be proved.
+
+Query inj-event(message_received_Bob(m_2,packet_number_4)) ==> inj-event(message_send_Alice(m_2,packet_number_4)) is false.
+
+--------------------------------------------------------------
+

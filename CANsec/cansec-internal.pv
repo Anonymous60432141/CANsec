@@ -1,0 +1,61 @@
+set traceDisplay = long.
+
+(* Define key type and channels *)
+type key.
+free scA: channel.
+
+(* Encryption, Decryption, and HMAC functions *)
+fun enc(bitstring, key): bitstring.
+fun dec(bitstring, key): bitstring.
+fun hmac(bitstring, bitstring, nat, nat, key): bitstring.
+
+(* Equations for symmetric encryption and decryption *)
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+
+(* Table to store association keys *)
+table association_keys(bitstring, nat, key).
+table freshness(bitstring, nat).
+
+(* Events to track message sending and receiving *)
+event message_received_B(bitstring, nat).
+event message_send_A(bitstring, nat).
+
+(* Peer A sends a message to Peer B *)
+let Alice(m: bitstring, sci_A: bitstring, fresh: nat, an: nat) =
+    get association_keys(=sci_A, =an, k_A) in
+        let msg = enc(m, k_A) in
+        let icv = hmac(sci_A, msg, fresh, an, k_A) in
+        event message_send_A(m, fresh);
+        out(scA, (sci_A, an, fresh, msg, icv)).
+
+(* Peer B receives and verifies the message from Peer A *)
+let Bob() = 
+    in(scA, (sci: bitstring, an: nat, fresh: nat, x: bitstring, icv: bitstring));
+    get association_keys(=sci, =an, sak) in
+        if icv = hmac(sci, x, fresh, an, sak) then (
+            get freshness(=sci, fv) suchthat fv>=fresh in 0 else(
+                insert freshness(sci, fresh); 
+                let received_msg = dec(x, sak) in
+                event message_received_B(received_msg, fresh)
+            )
+        ) else 0.
+
+
+(* Confidentiality Query: Ensure the attacker cannot learn the message *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) && attacker(m) ==> false.
+
+(* Authentication Query: Ensure every message received was actually sent *)
+query m: bitstring, fresh: nat;
+    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
+
+(* Main Process *)
+process
+    new k_A: key;
+    new sci_A: bitstring;
+    new msg: bitstring;
+    out(scA, k_A);
+    insert association_keys(sci_A, 0, k_A);
+    insert freshness(sci_A, 0);
+    (Alice(msg, sci_A, 1, 0) | Bob())

@@ -1,0 +1,114 @@
+Linear part: No equation.
+Convergent part:
+dec(enc(m,k),k) = m
+enc(dec(m,k),k) = m
+Completing equations...
+Completed equations:
+enc(dec(m,k),k) = m
+dec(enc(m,k),k) = m
+Process 0 (that is, the initial process):
+{1}new szk: key;
+{2}new sci_A: bitstring;
+{3}new msg: bitstring;
+{4}insert freshness(sci_A,0,0);
+{5}insert key_counter(sci_A,0,szk);
+(
+    {6}!
+    {7}let m: bitstring = msg in
+    {8}let sci_A_1: bitstring = sci_A in
+    {9}let szk_1: key = szk in
+    {10}let kc: nat = 1 in
+    {11}let sak_alice: key = kdf(szk_1,kc) in
+    {12}new randomness: bitstring;
+    {13}let icv: bitstring = hmac(randomness,kc,1,sak_alice) in
+    {14}out(scA, (sci_A_1,kc,1,enc(randomness,sak_alice),icv));
+    {15}let packet_number: nat = 2 in
+    {16}let msg_1: bitstring = enc(m,sak_alice) in
+    {17}let icv2: bitstring = hmac(msg_1,kc,packet_number,sak_alice) in
+    {18}event message_send_Alice(m,packet_number);
+    {19}out(scA, (sci_A_1,kc,packet_number,msg_1,icv2))
+) | (
+    {20}!
+    {21}let sci_A_2: bitstring = sci_A in
+    {22}let szk_2: key = szk in
+    {23}in(scA, (sci: bitstring,kc_1: nat,packet_number_1: nat,x: bitstring,icv_1: bitstring));
+    {33}get key_counter(=sci,=kc_1,ska_A: key) in
+    (
+        {28}get freshness(=sci,=kc_1,fv: nat) suchthat (fv ≥ packet_number_1) in
+            0
+        else
+            {24}if ((sci = sci_A_2) && (icv_1 = hmac(x,kc_1,packet_number_1,ska_A))) then
+            {25}let received_msg: bitstring = dec(x,ska_A) in
+            {26}insert freshness(sci_A_2,kc_1,packet_number_1);
+            {27}event message_received_Bob(received_msg,packet_number_1)
+    )
+    else
+        {29}let n_key: key = kdf(szk_2,kc_1) in
+        {30}if ((sci = sci_A_2) && ((packet_number_1 = 1) && (icv_1 = hmac(x,kc_1,packet_number_1,n_key)))) then
+        {31}insert freshness(sci_A_2,kc_1,packet_number_1);
+        {32}insert key_counter(sci_A_2,kc_1,n_key)
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+{1}new szk: key;
+{2}new sci_A: bitstring;
+{3}new msg: bitstring;
+{4}insert freshness(sci_A,0,0);
+{5}insert key_counter(sci_A,0,szk);
+(
+    {6}!
+    {12}new randomness: bitstring;
+    {10}let kc: nat = 1 in
+    {9}let szk_1: key = szk in
+    {11}let sak_alice: key = kdf(szk_1,kc) in
+    {13}let icv: bitstring = hmac(randomness,kc,1,sak_alice) in
+    {8}let sci_A_1: bitstring = sci_A in
+    {14}out(scA, (sci_A_1,kc,1,enc(randomness,sak_alice),icv));
+    {15}let packet_number: nat = 2 in
+    {7}let m: bitstring = msg in
+    {18}event message_send_Alice(m,packet_number);
+    {16}let msg_1: bitstring = enc(m,sak_alice) in
+    {17}let icv2: bitstring = hmac(msg_1,kc,packet_number,sak_alice) in
+    {19}out(scA, (sci_A_1,kc,packet_number,msg_1,icv2))
+) | (
+    {20}!
+    {23}in(scA, (sci: bitstring,kc_1: nat,packet_number_1: nat,x: bitstring,icv_1: bitstring));
+    {21}let sci_A_2: bitstring = sci_A in
+    {33}get key_counter(=sci,=kc_1,ska_A: key) in
+    (
+        {28}get freshness(=sci,=kc_1,fv: nat) suchthat (fv ≥ packet_number_1) in
+            0
+        else
+            {24}if ((sci = sci_A_2) && (icv_1 = hmac(x,kc_1,packet_number_1,ska_A))) then
+            {26}insert freshness(sci_A_2,kc_1,packet_number_1);
+            {25}let received_msg: bitstring = dec(x,ska_A) in
+            {27}event message_received_Bob(received_msg,packet_number_1)
+    )
+    else
+        {22}let szk_2: key = szk in
+        {29}let n_key: key = kdf(szk_2,kc_1) in
+        {30}if ((sci = sci_A_2) && ((packet_number_1 = 1) && (icv_1 = hmac(x,kc_1,packet_number_1,n_key)))) then
+        {31}insert freshness(sci_A_2,kc_1,packet_number_1);
+        {32}insert key_counter(sci_A_2,kc_1,n_key)
+)
+
+-- Query not (event(message_received_Bob(m_1,packet_number_2)) && attacker(m_1)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not (event(message_received_Bob(m_1,packet_number_2)) && attacker(m_1))
+RESULT not (event(message_received_Bob(m_1,packet_number_2)) && attacker(m_1)) is true.
+-- Query inj-event(message_received_Bob(m_1,packet_number_2)) ==> inj-event(message_send_Alice(m_1,packet_number_2)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query inj-event(message_received_Bob(m_1,packet_number_2)) ==> inj-event(message_send_Alice(m_1,packet_number_2))
+RESULT inj-event(message_received_Bob(m_1,packet_number_2)) ==> inj-event(message_send_Alice(m_1,packet_number_2)) is true.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not (event(message_received_Bob(m_1,packet_number_2)) && attacker(m_1)) is true.
+
+Query inj-event(message_received_Bob(m_1,packet_number_2)) ==> inj-event(message_send_Alice(m_1,packet_number_2)) is true.
+
+--------------------------------------------------------------
+

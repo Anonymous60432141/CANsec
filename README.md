@@ -1,0 +1,3 @@
+# Verification of CANsec Protocol
+
+This verifies the CANsec protocol using **ProVerif**, a protocol verification tool. CANsec is designed for secure communication in Controller Area Networks (CAN), ensuring confidentiality, integrity, and authenticity of messages between network nodes. The verification model here demonstrates message exchange and prevents replay and interception attacks within CANsec’s security architecture.

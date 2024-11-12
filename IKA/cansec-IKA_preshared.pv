@@ -66,15 +66,15 @@ query m: bitstring, packet_number: nat;
 
 (* Main process to simulate message exchange between Alice and Bob *)
 process
-    (* Generate the new SZK and compromised node has been revoked so key is not leaked *)
     new szk: key;
+    out(scA, szk);
     new sci_A: bitstring;
     new msg: bitstring;
     let kc = 1 in
     insert freshness(sci_A, 0, 0);
     insert key_counter(sci_A, 0, szk);
-    (!Alice(msg, sci_A, szk, kc) | !Bob(sci_A, szk))|
-    (* Previous key has been blacklisted *)
+    (Alice(msg, sci_A, szk, kc) | Bob(sci_A, szk))|
+
     phase 1;
     insert revoke_keys(kdf(szk, kc), sci_A);
-    (!Alice(msg, sci_A, szk, kc+1) | !Bob(sci_A, szk))
+    (Alice(msg, sci_A, szk, kc+1) | Bob(sci_A, szk))
