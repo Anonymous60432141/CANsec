@@ -166,13 +166,19 @@ The event message_received_B(a_2,a_1) is executed at {22} in copy a_3.
 The attacker has the message a_2.
 A trace has been found.
 RESULT not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is false.
--- Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) in process 1.
+-- Query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-Starting query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2))
-goal reachable: b-event(message_send_A(msg[],1)) && attacker(m_1) && attacker(fresh_2) -> event(message_received_B(m_1,fresh_2))
+Starting query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2))
+goal reachable: b-inj-event(message_send_A(msg[],1),@occ14_1) && attacker(m_1) && attacker(fresh_2) -> inj-event(message_received_B(m_1,fresh_2),@occ22_1)
+Abbreviations:
+@occ22_1 = @occ22[sak = k_A[],icv_1 = hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0,k_A[]),x = enc(m_1,k_A[]),fresh_1 = fresh_2,an_1 = 0,sci = sci_A[],!1 = @sid]
+@occ14_1 = @occ14[k_A_1 = k_A[],!1 = @sid_1]
 
 Derivation:
+Abbreviations:
+@occ22_1 = @occ22[sak = k_A[],icv_1 = hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0,k_A[]),x = enc(m_1,k_A[]),fresh_1 = fresh_2,an_1 = 0,sci = sci_A[],!1 = @sid]
+@occ14_1 = @occ14[k_A_1 = k_A[],!1 = @sid_1]
 
 1. The message k_A[] may be sent to the attacker at output {4}.
 attacker(k_A[]).
@@ -195,7 +201,7 @@ attacker(enc(m_1,k_A[])).
 table(association_keys(sci_A[],0,k_A[])).
 
 7. The entry association_keys(sci_A[],0,k_A[]) that may be in a table by 6 may be read at get {16}.
-The event message_send_A(msg[],1) may be executed at {14}.
+The event message_send_A(msg[],1) (with occurrence name @occ14_1) may be executed at {14}.
 So the message (sci_A[],0,1,enc(msg[],k_A[]),hmac(sci_A[],enc(msg[],k_A[]),1,0,k_A[])) may be sent to the attacker at output {15}.
 attacker((sci_A[],0,1,enc(msg[],k_A[]),hmac(sci_A[],enc(msg[],k_A[]),1,0,k_A[]))).
 
@@ -221,12 +227,12 @@ attacker((sci_A[],0,fresh_2,enc(m_1,k_A[]),hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0
 
 11. The message (sci_A[],0,fresh_2,enc(m_1,k_A[]),hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0,k_A[])) that the attacker may have by 10 may be received at input {18}.
 The entry association_keys(sci_A[],0,k_A[]) that may be in a table by 6 may be read at get {24}.
-So event message_received_B(m_1,fresh_2) may be executed at {22}.
-event(message_received_B(m_1,fresh_2)).
+So event message_received_B(m_1,fresh_2) may be executed at {22} in session @sid.
+inj-event(message_received_B(m_1,fresh_2),@occ22_1).
 
-12. By 11, event(message_received_B(m_1,fresh_2)).
+12. By 11, inj-event(message_received_B(m_1,fresh_2),@occ22_1).
 The goal is reached, represented in the following fact:
-event(message_received_B(m_1,fresh_2)).
+inj-event(message_received_B(m_1,fresh_2),@occ22_1).
 
 
 A more detailed output of the traces is available with
@@ -262,14 +268,15 @@ event message_received_B(dec(enc(a_2,k_A_2),k_A_2),a_1) at {22} in copy a_3 (goa
 
 The event message_received_B(a_2,a_1) is executed at {22} in copy a_3.
 A trace has been found.
-RESULT event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is false.
+RESULT inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) is false.
+RESULT (even event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is false.)
 
 --------------------------------------------------------------
 Verification summary:
 
 Query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is false.
 
-Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is false.
+Query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) is false.
 
 --------------------------------------------------------------
 
@@ -283,62 +290,60 @@ enc(dec(m,k),k) = m
 dec(enc(m,k),k) = m
 Process 0 (that is, the initial process):
 {1}new k_A: key;
-{2}new sci_A: bitstring;
-{3}new msg: bitstring;
-{4}insert association_keys(sci_A,0,k_A);
-{5}insert freshness(sci_A,0);
+{2}!
+{3}new sci_A: bitstring;
+{4}new msg: bitstring;
+{5}insert association_keys(sci_A,0,k_A);
+{6}out(counter, 1);
 (
-    {6}!
-    {7}let m: bitstring = msg in
-    {8}let sci_A_1: bitstring = sci_A in
-    {9}let fresh: nat = 1 in
-    {10}let an: nat = 0 in
-    {15}get association_keys(=sci_A_1,=an,k_A_1: key) in
-    {11}let msg_1: bitstring = enc(m,k_A_1) in
-    {12}let icv: bitstring = hmac(sci_A_1,msg_1,fresh,an,k_A_1) in
-    {13}event message_send_A(m,fresh);
-    {14}out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    {7}!
+    {8}let m: bitstring = msg in
+    {9}let sci_A_1: bitstring = sci_A in
+    {10}let fresh: nat = 1 in
+    {11}let an: nat = 0 in
+    {16}get association_keys(=sci_A_1,=an,k_A_1: key) in
+    {12}let msg_1: bitstring = enc(m,k_A_1) in
+    {13}let icv: bitstring = hmac(sci_A_1,msg_1,fresh,an,k_A_1) in
+    {14}event message_send_A(m,fresh);
+    {15}out(scA, (sci_A_1,an,fresh,msg_1,icv))
 ) | (
-    {16}!
-    {17}in(scA, (sci: bitstring,an_1: nat,fresh_1: nat,x: bitstring,icv_1: bitstring));
-    {23}get association_keys(=sci,=an_1,sak: key) in
-    {18}if (icv_1 = hmac(sci,x,fresh_1,an_1,sak)) then
-    {22}get freshness(=sci,fv: nat) suchthat (fv ≥ fresh_1) in
-        0
-    else
-        {19}insert freshness(sci,fresh_1);
-        {20}let received_msg: bitstring = dec(x,sak) in
-        {21}event message_received_B(received_msg,fresh_1)
+    {17}!
+    {18}in(scA, (sci: bitstring,an_1: nat,fresh_1: nat,x: bitstring,icv_1: bitstring));
+    {24}get association_keys(=sci,=an_1,sak: key) in
+    {19}in(counter, f: nat);
+    {20}if ((icv_1 = hmac(sci,x,fresh_1,an_1,sak)) && (f < fresh_1)) then
+    {21}out(counter, fresh_1);
+    {22}let received_msg: bitstring = dec(x,sak) in
+    {23}event message_received_B(received_msg,fresh_1)
 )
 
 --  Process 1 (that is, process 0, with let moved downwards):
 {1}new k_A: key;
-{2}new sci_A: bitstring;
-{3}new msg: bitstring;
-{4}insert association_keys(sci_A,0,k_A);
-{5}insert freshness(sci_A,0);
+{2}!
+{3}new sci_A: bitstring;
+{4}new msg: bitstring;
+{5}insert association_keys(sci_A,0,k_A);
+{6}out(counter, 1);
 (
-    {6}!
-    {10}let an: nat = 0 in
-    {8}let sci_A_1: bitstring = sci_A in
-    {15}get association_keys(=sci_A_1,=an,k_A_1: key) in
-    {9}let fresh: nat = 1 in
-    {7}let m: bitstring = msg in
-    {13}event message_send_A(m,fresh);
-    {11}let msg_1: bitstring = enc(m,k_A_1) in
-    {12}let icv: bitstring = hmac(sci_A_1,msg_1,fresh,an,k_A_1) in
-    {14}out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    {7}!
+    {11}let an: nat = 0 in
+    {9}let sci_A_1: bitstring = sci_A in
+    {16}get association_keys(=sci_A_1,=an,k_A_1: key) in
+    {10}let fresh: nat = 1 in
+    {8}let m: bitstring = msg in
+    {14}event message_send_A(m,fresh);
+    {12}let msg_1: bitstring = enc(m,k_A_1) in
+    {13}let icv: bitstring = hmac(sci_A_1,msg_1,fresh,an,k_A_1) in
+    {15}out(scA, (sci_A_1,an,fresh,msg_1,icv))
 ) | (
-    {16}!
-    {17}in(scA, (sci: bitstring,an_1: nat,fresh_1: nat,x: bitstring,icv_1: bitstring));
-    {23}get association_keys(=sci,=an_1,sak: key) in
-    {18}if (icv_1 = hmac(sci,x,fresh_1,an_1,sak)) then
-    {22}get freshness(=sci,fv: nat) suchthat (fv ≥ fresh_1) in
-        0
-    else
-        {19}insert freshness(sci,fresh_1);
-        {20}let received_msg: bitstring = dec(x,sak) in
-        {21}event message_received_B(received_msg,fresh_1)
+    {17}!
+    {18}in(scA, (sci: bitstring,an_1: nat,fresh_1: nat,x: bitstring,icv_1: bitstring));
+    {24}get association_keys(=sci,=an_1,sak: key) in
+    {19}in(counter, f: nat);
+    {20}if ((icv_1 = hmac(sci,x,fresh_1,an_1,sak)) && (f < fresh_1)) then
+    {21}out(counter, fresh_1);
+    {22}let received_msg: bitstring = dec(x,sak) in
+    {23}event message_received_B(received_msg,fresh_1)
 )
 
 -- Query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) in process 1.
@@ -346,19 +351,18 @@ Translating the process into Horn clauses...
 Completing...
 Starting query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1))
 RESULT not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is true.
--- Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) in process 1.
+-- Query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-Starting query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2))
-goal reachable: b-event(message_send_A(msg[],1)) -> event(message_received_B(dec(enc(msg[],k_A[]),k_A[]),1))
-RESULT event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is true.
+Starting query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2))
+RESULT inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) is true.
 
 --------------------------------------------------------------
 Verification summary:
 
 Query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is true.
 
-Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is true.
+Query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) is true.
 
 --------------------------------------------------------------
 
