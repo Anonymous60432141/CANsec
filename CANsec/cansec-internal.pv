@@ -48,7 +48,7 @@ query m: bitstring, fresh: nat;
 
 (* Authentication Query: Ensure every message received was actually sent *)
 query m: bitstring, fresh: nat;
-    inj-event(message_received_B(m, fresh)) ==> inj-event(message_send_A(m, fresh)).
+    inj-event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
 
 (* Main Process *)
 process

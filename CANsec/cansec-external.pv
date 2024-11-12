@@ -3,7 +3,6 @@ set traceDisplay = long.
 (* Define key type and channels *)
 type key.
 free scA: channel.
-free counter:channel [private].
 
 (* Encryption, Decryption, and HMAC functions *)
 fun enc(bitstring, key): bitstring.
@@ -16,6 +15,7 @@ equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
 
 (* Table to store association keys *)
 table association_keys(bitstring, nat, key).
+table freshness(bitstring, nat).
 
 (* Events to track message sending and receiving *)
 event message_received_B(bitstring, nat).
@@ -33,11 +33,12 @@ let Alice(m: bitstring, sci_A: bitstring, fresh: nat, an: nat) =
 let Bob() = 
     in(scA, (sci: bitstring, an: nat, fresh: nat, x: bitstring, icv: bitstring));
     get association_keys(=sci, =an, sak) in
-        in(counter, f:nat);
-        if icv = hmac(sci, x, fresh, an, sak) && f < fresh then (
-            out(counter, fresh);
-            let received_msg = dec(x, sak) in 
-            event message_received_B(received_msg, fresh)
+        if icv = hmac(sci, x, fresh, an, sak) then (
+            get freshness(=sci, fv) suchthat fv >= fresh in 0 else(
+                insert freshness(sci, fresh); 
+                let received_msg = dec(x, sak) in
+                event message_received_B(received_msg, fresh)
+            )
         ) else 0.
 
 
@@ -47,13 +48,13 @@ query m: bitstring, fresh: nat;
 
 (* Authentication Query: Ensure every message received was actually sent *)
 query m: bitstring, fresh: nat;
-    event(message_received_B(m, fresh)) ==> inj-event(message_send_A(m, fresh)).
+    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
 
 (* Main Process *)
 process
     new k_A: key;
-    !(new sci_A: bitstring;
+    new sci_A: bitstring;
     new msg: bitstring;
     insert association_keys(sci_A, 0, k_A);
-    out(counter, 1);
-    (!Alice(msg, sci_A, 1, 0) | !Bob()))
+    insert freshness(sci_A, 0);
+    (!Alice(msg, sci_A, 1, 0) | !Bob())

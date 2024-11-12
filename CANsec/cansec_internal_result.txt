@@ -246,19 +246,13 @@ The event message_received_B(a,a_1) is executed at {20}.
 The attacker has the message a.
 A trace has been found.
 RESULT not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is false.
--- Query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) in process 1.
+-- Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-Starting query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2))
-goal reachable: b-inj-event(message_send_A(msg[],1),@occ13_1) && attacker(m_1) && attacker(fresh_2) -> inj-event(message_received_B(m_1,fresh_2),@occ20_1)
-Abbreviations:
-@occ20_1 = @occ20[sak = k_A[],icv_1 = hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0,k_A[]),x = enc(m_1,k_A[]),fresh_1 = fresh_2,an_1 = 0,sci = sci_A[]]
-@occ13_1 = @occ13[k_A_1 = k_A[]]
+Starting query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2))
+goal reachable: b-event(message_send_A(msg[],1)) && attacker(m_1) && attacker(fresh_2) -> event(message_received_B(m_1,fresh_2))
 
 Derivation:
-Abbreviations:
-@occ20_1 = @occ20[sak = k_A[],icv_1 = hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0,k_A[]),x = enc(m_1,k_A[]),fresh_1 = fresh_2,an_1 = 0,sci = sci_A[]]
-@occ13_1 = @occ13[k_A_1 = k_A[]]
 
 1. The message k_A[] may be sent to the attacker at output {4}.
 attacker(k_A[]).
@@ -281,7 +275,7 @@ attacker(enc(m_1,k_A[])).
 table(association_keys(sci_A[],0,k_A[])).
 
 7. The entry association_keys(sci_A[],0,k_A[]) that may be in a table by 6 may be read at get {15}.
-The event message_send_A(msg[],1) (with occurrence name @occ13_1) may be executed at {13}.
+The event message_send_A(msg[],1) may be executed at {13}.
 So the message (sci_A[],0,1,enc(msg[],k_A[]),hmac(sci_A[],enc(msg[],k_A[]),1,0,k_A[])) may be sent to the attacker at output {14}.
 attacker((sci_A[],0,1,enc(msg[],k_A[]),hmac(sci_A[],enc(msg[],k_A[]),1,0,k_A[]))).
 
@@ -308,11 +302,11 @@ attacker((sci_A[],0,fresh_2,enc(m_1,k_A[]),hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0
 11. The message (sci_A[],0,fresh_2,enc(m_1,k_A[]),hmac(sci_A[],enc(m_1,k_A[]),fresh_2,0,k_A[])) that the attacker may have by 10 may be received at input {16}.
 The entry association_keys(sci_A[],0,k_A[]) that may be in a table by 6 may be read at get {22}.
 So event message_received_B(m_1,fresh_2) may be executed at {20}.
-inj-event(message_received_B(m_1,fresh_2),@occ20_1).
+event(message_received_B(m_1,fresh_2)).
 
-12. By 11, inj-event(message_received_B(m_1,fresh_2),@occ20_1).
+12. By 11, event(message_received_B(m_1,fresh_2)).
 The goal is reached, represented in the following fact:
-inj-event(message_received_B(m_1,fresh_2),@occ20_1).
+event(message_received_B(m_1,fresh_2)).
 
 
 Initial state
@@ -432,15 +426,14 @@ New processes:
 --------------------------------------------------------------
 The event message_received_B(a_1,a) is executed at {20}.
 A trace has been found.
-RESULT inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) is false.
-RESULT (even event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is false.)
+RESULT event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is false.
 
 --------------------------------------------------------------
 Verification summary:
 
 Query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is false.
 
-Query inj-event(message_received_B(m_1,fresh_2)) ==> inj-event(message_send_A(m_1,fresh_2)) is false.
+Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is false.
 
 --------------------------------------------------------------
 
