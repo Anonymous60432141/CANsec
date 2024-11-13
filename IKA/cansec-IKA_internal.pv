@@ -27,7 +27,7 @@ let Alice(m: bitstring, sci_A: bitstring, szk: key, kc: nat) =
     new random_msg: bitstring;                           (* Generates a new random message component *)
     let packet_number = 1 in                             (* Sets the initial packet number *)
     let icv = hmac(random_msg, kc, packet_number, sak_alice) in   (* Computes an integrity check value *)
-    out(scA, (sci_A, kc, 1, enc(random_msg, sak_alice), icv));    (* Sends initial message with encryption and integrity check *)
+    out(scA, (sci_A, kc, 1, random_msg, icv));    (* Sends initial message with encryption and integrity check *)
     
     let msg = enc(m, sak_alice) in                       (* Encrypts the actual message *)
     let icv2 = hmac(msg, kc, packet_number+1, sak_alice) in (* Computes a second integrity check value *)

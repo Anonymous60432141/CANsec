@@ -23,7 +23,7 @@ Process 0 (that is, the initial process):
     {13}new random_msg: bitstring;
     {14}let packet_number: nat = 1 in
     {15}let icv: bitstring = hmac(random_msg,kc,packet_number,sak_alice) in
-    {16}out(scA, (sci_A_1,kc,1,enc(random_msg,sak_alice),icv));
+    {16}out(scA, (sci_A_1,kc,1,random_msg,icv));
     {17}let msg_1: bitstring = enc(m,sak_alice) in
     {18}let icv2: bitstring = hmac(msg_1,kc,packet_number + 1,sak_alice) in
     {19}event message_send_Alice(m,packet_number + 1);
@@ -72,7 +72,7 @@ Process 0 (that is, the initial process):
     {12}let sak_alice: key = kdf(szk_1,kc) in
     {15}let icv: bitstring = hmac(random_msg,kc,packet_number,sak_alice) in
     {10}let sci_A_1: bitstring = sci_A in
-    {16}out(scA, (sci_A_1,kc,1,enc(random_msg,sak_alice),icv));
+    {16}out(scA, (sci_A_1,kc,1,random_msg,icv));
     {9}let m: bitstring = msg in
     {19}event message_send_Alice(m,packet_number + 1);
     {17}let msg_1: bitstring = enc(m,sak_alice) in
@@ -140,10 +140,10 @@ By 2, the attacker may know szk[].
 Using the function hmac the attacker may obtain hmac(enc(m_1,szk[]),0,packet_number_2,szk[]).
 attacker(hmac(enc(m_1,szk[]),0,packet_number_2,szk[])).
 
-7. The message (sci_A[],1,1,enc(random_msg_1,kdf(szk[],1)),hmac(random_msg_1,1,1,kdf(szk[],1))) may be sent to the attacker at output {16}.
-attacker((sci_A[],1,1,enc(random_msg_1,kdf(szk[],1)),hmac(random_msg_1,1,1,kdf(szk[],1)))).
+7. The message (sci_A[],1,1,random_msg_1,hmac(random_msg_1,1,1,kdf(szk[],1))) may be sent to the attacker at output {16}.
+attacker((sci_A[],1,1,random_msg_1,hmac(random_msg_1,1,1,kdf(szk[],1)))).
 
-8. By 7, the attacker may know (sci_A[],1,1,enc(random_msg_1,kdf(szk[],1)),hmac(random_msg_1,1,1,kdf(szk[],1))).
+8. By 7, the attacker may know (sci_A[],1,1,random_msg_1,hmac(random_msg_1,1,1,kdf(szk[],1))).
 Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
 attacker(sci_A[]).
 
@@ -186,7 +186,7 @@ insert key_counter(sci_A_3,0,szk_3) at {7}
 
 new random_msg: bitstring creating random_msg_2 at {13} in copy a
 
-out(scA, (~M_1,1,1,~M_2,~M_3)) with ~M_1 = sci_A_3, ~M_2 = enc(random_msg_2,kdf(szk_3,1)), ~M_3 = hmac(random_msg_2,1,1,kdf(szk_3,1)) at {16} in copy a
+out(scA, (~M_1,1,1,~M_2,~M_3)) with ~M_1 = sci_A_3, ~M_2 = random_msg_2, ~M_3 = hmac(random_msg_2,1,1,kdf(szk_3,1)) at {16} in copy a
 
 event message_send_Alice(msg_2,2) at {19} in copy a
 
@@ -245,10 +245,10 @@ By 1, the attacker may know szk[].
 Using the function hmac the attacker may obtain hmac(enc(m_1,szk[]),0,packet_number_2,szk[]).
 attacker(hmac(enc(m_1,szk[]),0,packet_number_2,szk[])).
 
-7. The message (sci_A[],1,1,enc(random_msg_1,kdf(szk[],1)),hmac(random_msg_1,1,1,kdf(szk[],1))) may be sent to the attacker at output {16}.
-attacker((sci_A[],1,1,enc(random_msg_1,kdf(szk[],1)),hmac(random_msg_1,1,1,kdf(szk[],1)))).
+7. The message (sci_A[],1,1,random_msg_1,hmac(random_msg_1,1,1,kdf(szk[],1))) may be sent to the attacker at output {16}.
+attacker((sci_A[],1,1,random_msg_1,hmac(random_msg_1,1,1,kdf(szk[],1)))).
 
-8. By 7, the attacker may know (sci_A[],1,1,enc(random_msg_1,kdf(szk[],1)),hmac(random_msg_1,1,1,kdf(szk[],1))).
+8. By 7, the attacker may know (sci_A[],1,1,random_msg_1,hmac(random_msg_1,1,1,kdf(szk[],1))).
 Using the function 1-proj-5-tuple the attacker may obtain sci_A[].
 attacker(sci_A[]).
 
@@ -290,7 +290,7 @@ insert key_counter(sci_A_3,0,szk_3) at {7}
 
 new random_msg: bitstring creating random_msg_2 at {13} in copy a
 
-out(scA, (~M_1,1,1,~M_2,~M_3)) with ~M_1 = sci_A_3, ~M_2 = enc(random_msg_2,kdf(szk_3,1)), ~M_3 = hmac(random_msg_2,1,1,kdf(szk_3,1)) at {16} in copy a
+out(scA, (~M_1,1,1,~M_2,~M_3)) with ~M_1 = sci_A_3, ~M_2 = random_msg_2, ~M_3 = hmac(random_msg_2,1,1,kdf(szk_3,1)) at {16} in copy a
 
 in(scA, (~M_1,0,a_1,enc(a_2,~M),hmac(enc(a_2,~M),0,a_1,~M))) with ~M_1 = sci_A_3, enc(a_2,~M) = enc(a_2,szk_3), hmac(enc(a_2,~M),0,a_1,~M) = hmac(enc(a_2,szk_3),0,a_1,szk_3) at {24} in copy a_3
 

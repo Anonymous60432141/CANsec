@@ -7,83 +7,95 @@ Completed equations:
 enc(dec(m,k),k) = m
 dec(enc(m,k),k) = m
 Process 0 (that is, the initial process):
-{1}new k_A: key;
+{1}new session_key: key;
 {2}new sci_A: bitstring;
-{3}new msg: bitstring;
-{4}insert association_keys(sci_A,0,k_A);
-{5}insert freshness(sci_A,0);
+{3}new packet_number: number;
+{4}new an: number;
+{5}out(association_key, (sci_A,an,session_key));
+{6}out(freshness, (sci_A,an,packet_number));
 (
-    {6}!
-    {7}let m: bitstring = msg in
-    {8}let sci_A_1: bitstring = sci_A in
-    {9}let fresh: nat = 1 in
-    {10}let an: nat = 0 in
-    {15}get association_keys(=sci_A_1,=an,k_A_1: key) in
-    {11}let msg_1: bitstring = enc(m,k_A_1) in
-    {12}let icv: bitstring = hmac(sci_A_1,msg_1,fresh,an,k_A_1) in
-    {13}event message_send_A(m,fresh);
-    {14}out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    {7}let sci_A_1: bitstring = sci_A in
+    {8}new packet_number_1: number;
+    {9}new msg: bitstring;
+    {10}in(association_key, (sci: bitstring,an_1: number,sak: key));
+    {11}let x: bitstring = enc(msg,sak) in
+    {12}let icv: bitstring = hmac(x,an_1,packet_number_1,sak) in
+    {13}event message_send_Alice(msg,packet_number_1);
+    {14}out(scA, (sci_A_1,an_1,packet_number_1,x,icv))
 ) | (
-    {16}!
-    {17}in(scA, (sci: bitstring,an_1: nat,fresh_1: nat,x: bitstring,icv_1: bitstring));
-    {23}get association_keys(=sci,=an_1,sak: key) in
-    {18}if (icv_1 = hmac(sci,x,fresh_1,an_1,sak)) then
-    {22}get freshness(=sci,fv: nat) suchthat (fv ≥ fresh_1) in
+    {15}in(scA, (sci_1: bitstring,an_2: number,packet_number_2: number,x_1: bitstring,icv_1: bitstring));
+    {16}in(association_key, (sci_A_2: bitstring,an_key: number,sak_1: key));
+    {17}if ((icv_1 ≠ hmac(x_1,an_2,packet_number_2,sak_1)) || ((sci_1 ≠ sci_A_2) || (an_2 ≠ an_key))) then
         0
     else
-        {19}insert freshness(sci,fresh_1);
-        {20}let received_msg: bitstring = dec(x,sak) in
-        {21}event message_received_B(received_msg,fresh_1)
+        {18}in(freshness, (sci_Alice: bitstring,curr_an: number,fresh: number));
+        {19}if ((fresh = packet_number_2) || ((an_2 ≠ curr_an) || (sci_1 ≠ sci_Alice))) then
+            0
+        else
+            {20}out(freshness, (sci_1,an_2,packet_number_2));
+            {21}let msg_1: bitstring = dec(x_1,sak_1) in
+            {22}event message_received_Bob(msg_1,packet_number_2)
 )
 
 --  Process 1 (that is, process 0, with let moved downwards):
-{1}new k_A: key;
+{1}new session_key: key;
 {2}new sci_A: bitstring;
-{3}new msg: bitstring;
-{4}insert association_keys(sci_A,0,k_A);
-{5}insert freshness(sci_A,0);
+{3}new packet_number: number;
+{4}new an: number;
+{5}out(association_key, (sci_A,an,session_key));
+{6}out(freshness, (sci_A,an,packet_number));
 (
-    {6}!
-    {10}let an: nat = 0 in
-    {8}let sci_A_1: bitstring = sci_A in
-    {15}get association_keys(=sci_A_1,=an,k_A_1: key) in
-    {9}let fresh: nat = 1 in
-    {7}let m: bitstring = msg in
-    {13}event message_send_A(m,fresh);
-    {11}let msg_1: bitstring = enc(m,k_A_1) in
-    {12}let icv: bitstring = hmac(sci_A_1,msg_1,fresh,an,k_A_1) in
-    {14}out(scA, (sci_A_1,an,fresh,msg_1,icv))
+    {8}new packet_number_1: number;
+    {9}new msg: bitstring;
+    {10}in(association_key, (sci: bitstring,an_1: number,sak: key));
+    {13}event message_send_Alice(msg,packet_number_1);
+    {11}let x: bitstring = enc(msg,sak) in
+    {12}let icv: bitstring = hmac(x,an_1,packet_number_1,sak) in
+    {7}let sci_A_1: bitstring = sci_A in
+    {14}out(scA, (sci_A_1,an_1,packet_number_1,x,icv))
 ) | (
-    {16}!
-    {17}in(scA, (sci: bitstring,an_1: nat,fresh_1: nat,x: bitstring,icv_1: bitstring));
-    {23}get association_keys(=sci,=an_1,sak: key) in
-    {18}if (icv_1 = hmac(sci,x,fresh_1,an_1,sak)) then
-    {22}get freshness(=sci,fv: nat) suchthat (fv ≥ fresh_1) in
+    {15}in(scA, (sci_1: bitstring,an_2: number,packet_number_2: number,x_1: bitstring,icv_1: bitstring));
+    {16}in(association_key, (sci_A_2: bitstring,an_key: number,sak_1: key));
+    {17}if ((icv_1 ≠ hmac(x_1,an_2,packet_number_2,sak_1)) || ((sci_1 ≠ sci_A_2) || (an_2 ≠ an_key))) then
         0
     else
-        {19}insert freshness(sci,fresh_1);
-        {20}let received_msg: bitstring = dec(x,sak) in
-        {21}event message_received_B(received_msg,fresh_1)
+        {18}in(freshness, (sci_Alice: bitstring,curr_an: number,fresh: number));
+        {19}if ((fresh = packet_number_2) || ((an_2 ≠ curr_an) || (sci_1 ≠ sci_Alice))) then
+            0
+        else
+            {20}out(freshness, (sci_1,an_2,packet_number_2));
+            {21}let msg_1: bitstring = dec(x_1,sak_1) in
+            {22}event message_received_Bob(msg_1,packet_number_2)
 )
 
--- Query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) in process 1.
+-- Query not (event(message_received_Bob(m,packet_number_3)) && attacker(m)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-Starting query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1))
-RESULT not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is true.
--- Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) in process 1.
+Termination warning: Selecting an hypothesis matching the conclusion.
+In case of non-termination, try a noselect declaration implying the following one:
+   noselect fresh_1:number; mess(freshness[],(sci_A[],an[],fresh_1)).
+Starting query not (event(message_received_Bob(m,packet_number_3)) && attacker(m))
+RESULT not (event(message_received_Bob(m,packet_number_3)) && attacker(m)) is true.
+-- Query inj-event(message_received_Bob(m,packet_number_3)) ==> inj-event(message_send_Alice(m,packet_number_3)) in process 1.
 Translating the process into Horn clauses...
 Completing...
-Starting query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2))
-goal reachable: b-event(message_send_A(msg[],1)) -> event(message_received_B(dec(enc(msg[],k_A[]),k_A[]),1))
-RESULT event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is true.
+Termination warning: Selecting an hypothesis matching the conclusion.
+In case of non-termination, try a noselect declaration implying the following one:
+   noselect fresh_1:number; mess(freshness[],(sci_A[],an[],fresh_1)).
+Starting query inj-event(message_received_Bob(m,packet_number_3)) ==> inj-event(message_send_Alice(m,packet_number_3))
+goal reachable: b-inj-event(message_send_Alice(msg[],packet_number_1[]),@occ13_1) -> inj-event(message_received_Bob(dec(enc(msg[],session_key[]),session_key[]),packet_number_1[]),@occ22_1)
+The hypothesis occurs strictly before the conclusion.
+Abbreviations:
+@occ22_1 = @occ22[fresh = packet_number[],curr_an = an[],sci_Alice = sci_A[],sak_1 = session_key[],an_key = an[],sci_A_2 = sci_A[],icv_1 = hmac(enc(msg[],session_key[]),an[],packet_number_1[],session_key[]),x_1 = enc(msg[],session_key[]),packet_number_2 = packet_number_1[],an_2 = an[],sci_1 = sci_A[]]
+@occ13_1 = @occ13[sak = session_key[],an_1 = an[],sci = sci_A[]]
+RESULT inj-event(message_received_Bob(m,packet_number_3)) ==> inj-event(message_send_Alice(m,packet_number_3)) is true.
 
 --------------------------------------------------------------
 Verification summary:
 
-Query not (event(message_received_B(m_1,fresh_2)) && attacker(m_1)) is true.
+Query not (event(message_received_Bob(m,packet_number_3)) && attacker(m)) is true.
 
-Query event(message_received_B(m_1,fresh_2)) ==> event(message_send_A(m_1,fresh_2)) is true.
+Query inj-event(message_received_Bob(m,packet_number_3)) ==> inj-event(message_send_Alice(m,packet_number_3)) is true.
 
 --------------------------------------------------------------
 

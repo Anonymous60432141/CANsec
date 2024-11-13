@@ -1,60 +1,59 @@
-set traceDisplay = long.
+type key.             (* A type representing cryptographic keys *)
+type number.
 
-(* Define key type and channels *)
-type key.
-free scA: channel.
+free freshness: channel[private].
+free association_key: channel[private].
+free scA: channel.    
 
 (* Encryption, Decryption, and HMAC functions *)
-fun enc(bitstring, key): bitstring.
-fun dec(bitstring, key): bitstring.
-fun hmac(bitstring, bitstring, nat, nat, key): bitstring.
+fun enc(bitstring, key): bitstring.             (* Symmetric encryption function *)
+fun dec(bitstring, key): bitstring.             (* Symmetric decryption function *)
+fun hmac(bitstring, number, number, key): bitstring.  (* HMAC function to provide integrity checks *)
 
-(* Equations for symmetric encryption and decryption *)
-equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.
-equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.
+(* Symmetric encryption and decryption equations *)
+equation forall m: bitstring, k: key; dec(enc(m, k), k) = m.   (* Decrypting an encrypted message with the same key yields the original message *)
+equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.   (* Encrypting a decrypted message with the same key yields the original message *)
 
-(* Table to store association keys *)
-table association_keys(bitstring, nat, key).
-table freshness(bitstring, nat).
+(* Events marking message exchange between Alice and Bob *)
+event message_received_Bob(bitstring, number).  (* Event indicating that Bob successfully received a message *)
+event message_send_Alice(bitstring, number).    (* Event indicating that Alice sent a message *)
 
-(* Events to track message sending and receiving *)
-event message_received_B(bitstring, nat).
-event message_send_A(bitstring, nat).
+(* Process representing Alice sending a message to Bob *)
+let Alice(sci_A: bitstring) =
+    new packet_number: number;
+    new msg:bitstring;
+    in(association_key, (sci:bitstring, an:number, sak:key));
+    let x = enc(msg, sak) in
+    let icv = hmac(x, an, packet_number, sak) in 
+    event message_send_Alice(msg, packet_number);
+    out(scA, (sci_A, an, packet_number, x, icv)).
 
-(* Peer A sends a message to Peer B *)
-let Alice(m: bitstring, sci_A: bitstring, fresh: nat, an: nat) =
-    get association_keys(=sci_A, =an, k_A) in
-        let msg = enc(m, k_A) in
-        let icv = hmac(sci_A, msg, fresh, an, k_A) in
-        event message_send_A(m, fresh);
-        out(scA, (sci_A, an, fresh, msg, icv)).
+(* Process representing Bob receiving and verifying a message from Alice *)
+let Bob() =
+    in(scA, (sci: bitstring, an: number, packet_number: number, x: bitstring, icv: bitstring)); (* Waits to receive a packet from Alice *)
+    (* retriving key from the persistant memory *)
+    in(association_key, (sci_A:bitstring, an_key:number, sak:key));
+    if icv <> hmac(x, an, packet_number, sak) || sci <> sci_A || an <> an_key then 0 else(
+        in(freshness, (sci_Alice:bitstring, curr_an:number, fresh:number));
+        if fresh = packet_number || an <> curr_an || sci <> sci_Alice then 0 else(
+        out(freshness, (sci, an, packet_number));
+        let msg = dec(x, sak) in
+        event message_received_Bob(msg, packet_number))).
 
-(* Peer B receives and verifies the message from Peer A *)
-let Bob() = 
-    in(scA, (sci: bitstring, an: nat, fresh: nat, x: bitstring, icv: bitstring));
-    get association_keys(=sci, =an, sak) in
-        if icv = hmac(sci, x, fresh, an, sak) then (
-            get freshness(=sci, fv) suchthat fv >= fresh in 0 else(
-                insert freshness(sci, fresh); 
-                let received_msg = dec(x, sak) in
-                event message_received_B(received_msg, fresh)
-            )
-        ) else 0.
+(* Confidentiality query: Ensure messages cannot be intercepted by an attacker *)
+query m: bitstring, packet_number: number;
+    event(message_received_Bob(m, packet_number)) && attacker(m) ==> false.
 
+(* Authentication query to prevent replay attacks: Ensures only messages actually sent by Alice can be received by Bob *)
+query m: bitstring, packet_number: number;
+    inj-event(message_received_Bob(m, packet_number)) ==> inj-event(message_send_Alice(m, packet_number)).
 
-(* Confidentiality Query: Ensure the attacker cannot learn the message *)
-query m: bitstring, fresh: nat;
-    event(message_received_B(m, fresh)) && attacker(m) ==> false.
-
-(* Authentication Query: Ensure every message received was actually sent *)
-query m: bitstring, fresh: nat;
-    event(message_received_B(m, fresh)) ==> event(message_send_A(m, fresh)).
-
-(* Main Process *)
+(* Main process to simulate message exchange between Alice and Bob *)
 process
-    new k_A: key;
-    new sci_A: bitstring;
-    new msg: bitstring;
-    insert association_keys(sci_A, 0, k_A);
-    insert freshness(sci_A, 0);
-    (!Alice(msg, sci_A, 1, 0) | !Bob())
+    new session_key: key;                                          (* Creates a new session key shared between Alice and Bob *)
+    new sci_A: bitstring;                
+    new packet_number:number;
+    new an:number;
+    out(association_key, (sci_A, an, session_key));
+    out(freshness, (sci_A, an, packet_number));
+    (Alice(sci_A) | Bob())        (* Spawns Alice and Bob processes for continuous message exchange *)
