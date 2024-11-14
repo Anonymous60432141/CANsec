@@ -17,22 +17,26 @@ equation forall m: bitstring, k: key; enc(dec(m, k), k) = m.   (* Encrypting a d
 (* Events marking message exchange between Alice and Bob *)
 event message_received_Bob(bitstring, number).  (* Event indicating that Bob successfully received a message *)
 event message_send_Alice(bitstring, number).    (* Event indicating that Alice sent a message *)
+table revoke_keys(key, number). 
 
 (* Process representing Alice sending a message to Bob *)
 let Alice(sci_A: bitstring) =
     new packet_number: number;
     new msg:bitstring;
     in(association_key, (sci:bitstring, an:number, sak:key));
+    
+    get revoke_keys(=sak, an_revoke) suchthat an_revoke = an in 0 else(
     let x = enc(msg, sak) in
     let icv = hmac(x, an, packet_number, sak) in 
     event message_send_Alice(msg, packet_number);
-    out(scA, (sci_A, an, packet_number, x, icv)).
+    out(scA, (sci_A, an, packet_number, x, icv))).
 
 (* Process representing Bob receiving and verifying a message from Alice *)
 let Bob() =
     in(scA, (sci: bitstring, an: number, packet_number: number, x: bitstring, icv: bitstring)); (* Waits to receive a packet from Alice *)
     (* retriving key from the persistant memory *)
     in(association_key, (sci_A:bitstring, an_key:number, sak:key));
+    get revoke_keys(=sak, an_revoke) suchthat an_revoke = an in 0 else
     if icv <> hmac(x, an, packet_number, sak) || sci <> sci_A || an <> an_key then 0 else(
         in(freshness, (sci_Alice:bitstring, curr_an:number, fresh:number));
         if fresh = packet_number || an <> curr_an || sci <> sci_Alice then 0 else(
@@ -50,9 +54,12 @@ query m: bitstring, packet_number: number;
 
 (* Main process to simulate message exchange between Alice and Bob *)
 process
-    new session_key: key;                                          (* Creates a new session key shared between Alice and Bob *)
+    new session_key_old: key;                                          (* Creates a new session key shared between Alice and Bob *)
     new sci_A: bitstring;                
     new packet_number:number;
+    new an_prev:number;
+    insert revoke_keys(session_key_old, an_prev);
+    new session_key: key;
     new an:number;
     out(association_key, (sci_A, an, session_key));
     out(freshness, (sci_A, an, packet_number));
